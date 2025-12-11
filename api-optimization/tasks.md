@@ -1,0 +1,187 @@
+# Implementation Plan
+
+- [x] 1. 后端基础设施准备
+  - [x] 1.1 创建统一响应包装器
+    - 在 `apps/common/response.py` 中实现 `ApiResponse` 类
+    - 包含 `success()`, `error()`, `paginated()` 静态方法
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 1.2 创建自定义异常处理器
+    - 在 `apps/common/exceptions.py` 中实现 `custom_exception_handler`
+    - 配置到 Django REST Framework 设置中
+    - _Requirements: 2.2_
+  - [x] 1.3 编写属性测试：响应格式一致性
+    - **Property 3: 成功响应格式一致性**
+    - **Property 4: 错误响应格式一致性**
+    - **Validates: Requirements 2.1, 2.2**
+
+- [x] 2. 简历库模块解耦
+  - [x] 2.1 创建 resume_library Django应用
+    - 运行 `python manage.py startapp resume_library` 在 apps 目录下
+    - 配置 `apps.py` 和注册到 `INSTALLED_APPS`
+    - _Requirements: 6.1_
+  - [x] 2.2 迁移 ResumeLibrary 模型
+    - 从 `resume_screening/models.py` 移动 `ResumeLibrary` 模型到新模块
+    - 创建数据库迁移文件（使用 SeparateDatabaseAndState 处理模型转移）
+    - _Requirements: 6.1_
+  - [x] 2.3 实现简历库服务层
+    - 创建 `services.py` 实现 `LibraryService` 类
+    - 提供 `get_resume_by_id()`, `mark_as_screened()` 等接口
+    - _Requirements: 6.4_
+  - [x] 2.4 实现简历库视图和路由
+    - 创建 `views.py` 实现 CRUD 视图
+    - 创建 `urls.py` 配置路由
+    - _Requirements: 6.1_
+  - [x] 2.5 编写单元测试：简历库模块
+    - 测试简历上传、查询、删除功能（24个测试全部通过）
+    - _Requirements: 6.1_
+
+- [x] 3. 后端URL路由重构
+  - [x] 3.1 更新主路由配置
+    - 修改 `config/urls.py` 添加 `/api/` 前缀
+    - 注册所有模块路由（positions, library, screening, videos, recommend, interviews）
+    - _Requirements: 1.1_
+  - [x] 3.2 重构岗位设置模块路由
+    - 更新 `apps/position_settings/urls.py`
+    - 移除冗余路径 `/list/` 和 `/positions/` 前缀
+    - 规范化路径：`/resumes/` 替代 `/assign-resumes/`
+    - _Requirements: 1.2, 1.4, 1.5_
+  - [x] 3.3 重构简历筛选模块路由
+    - 更新 `apps/resume_screening/urls.py`
+    - 移除 `/screening/` 前缀，简化 `/tasks-history/` 为 `/tasks/`
+    - 规范化路径命名
+    - _Requirements: 1.2, 6.2_
+  - [x] 3.4 重构其他模块路由
+    - `video_analysis`: 移除 `/list/` 冗余，添加 `/upload/` 路径
+    - `final_recommend`: 简化 `/comprehensive-analysis/` 为 `/analysis/`
+    - `interview_assist`: 简化 `/generate-questions/` 为 `/questions/` 等
+    - _Requirements: 1.2, 7.4_
+  - [x] 3.5 编写属性测试：API路径规范
+    - **Property 1: API路径前缀一致性** - 9个测试全部通过
+    - **Property 2: 无冗余路径**
+    - **Property 10: URL路径命名规范**
+    - **Validates: Requirements 1.1, 1.4, 7.4**
+
+- [x] 4. 后端视图层重构（使用统一响应格式）
+  - [x] 4.1 更新岗位设置视图使用ApiResponse
+    - 修改 `apps/position_settings/views.py` 所有视图
+    - 将 `JsonResponse({'code': ...})` 替换为 `ApiResponse.success()` 等方法
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 4.2 更新简历库视图使用ApiResponse
+    - 修改 `apps/resume_library/views.py` 所有视图
+    - 将 `JsonResponse({'code': ...})` 替换为 `ApiResponse` 方法
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 4.3 更新简历筛选视图使用ApiResponse
+    - 修改 `apps/resume_screening/views/` 目录下所有视图文件
+    - 将 `JsonResponse` 和 `Response` 替换为 `ApiResponse` 方法
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 4.4 更新视频分析视图使用ApiResponse
+    - 修改 `apps/video_analysis/views.py` 所有视图
+    - 将 `JsonResponse` 和 `Response` 替换为 `ApiResponse` 方法
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 4.5 更新最终推荐视图使用ApiResponse
+    - 修改 `apps/final_recommend/views.py` 所有视图
+    - 将 `JsonResponse` 替换为 `ApiResponse` 方法
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 4.6 更新面试辅助视图使用ApiResponse
+    - 修改 `apps/interview_assist/views.py` 所有视图
+    - 将 `JsonResponse` 替换为 `ApiResponse` 方法
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 4.7 验证所有视图类有docstring
+    - 检查所有视图类是否有完整的docstring描述（全部37个视图类都有docstring）
+    - _Requirements: 5.2_
+  - [x] 4.8 编写属性测试：视图文档完整性
+    - **Property 7: 视图类文档完整性**（41个测试全部通过）
+    - **Validates: Requirements 5.2**
+
+- [x] 5. Checkpoint - 确保后端测试通过
+  - 修复 `test_video_analysis.py` 中 `test_get_video_list` 测试以适配统一响应格式
+  - 所有 96 个测试通过 ✓
+
+- [x] 6. 废弃API清理与文档更新
+  - [x] 6.1 移除后端废弃代码
+    - 批量评估代码已清理，`InterviewEvaluationTask` 模型保留仅为数据库兼容
+    - _Requirements: 4.1_
+  - [x] 6.2 更新API文档
+    - 更新 `config/spectacular_hooks.py` 和 `Docs/生成API文档.py` 适配新 `/api/` 前缀
+    - 重新生成 OpenAPI schema（50个端点，6个模块）
+    - 更新 `Docs/API参考文档.md`
+    - _Requirements: 4.3, 5.1_
+  - [x] 6.3 编写属性测试：Schema一致性
+    - **Property 6: OpenAPI Schema与实现一致性**（16个测试全部通过）
+    - 测试文件：`tests/test_openapi_schema_properties.py`
+    - **Validates: Requirements 5.1**
+
+- [x] 7. 前端API模块重构
+  - [x] 7.1 创建API配置模块
+    - 创建 `src/api/config.ts` 配置axios实例
+    - 实现统一的响应拦截器处理 `{code, message, data}` 格式
+    - 实现 `ApiError` 类和 `rawApiClient`（用于文件下载）
+    - _Requirements: 3.1, 3.4_
+  - [x] 7.2 创建端点常量模块
+    - 创建 `src/api/endpoints.ts` 定义所有API路径
+    - 包含6个模块的完整端点定义（positions, library, screening, videos, recommend, interviews）
+    - _Requirements: 3.3_
+  - [x] 7.3 重构positionApi模块
+    - 更新 `src/api/index.ts` 中的 `positionApi`
+    - 使用axios实例和端点常量
+    - 更新路径为 `/api/positions/`
+    - _Requirements: 3.1, 3.2, 3.3_
+  - [x] 7.4 创建独立的libraryApi模块
+    - 实现简历库API调用
+    - 路径指向 `/api/library/`
+    - _Requirements: 6.3_
+  - [x] 7.5 重构screeningApi模块
+    - 更新简历筛选API调用
+    - 移除简历库相关方法（已迁移到libraryApi）
+    - 更新路径为 `/api/screening/`
+    - _Requirements: 3.1, 6.2_
+  - [x] 7.6 重构其他API模块
+    - 更新 `videoApi`, `recommendApi`, `interviewAssistApi`, `devToolsApi`
+    - 使用统一的axios实例和端点常量
+    - 前端编译验证通过 ✓
+    - _Requirements: 3.1, 3.2_
+
+- [x] 8. 前端类型定义更新
+  - [x] 8.1 统一字段命名
+    - 更新 `src/types/index.ts` 移除别名字段 (`scores` → `screening_score`, `summary` → `screening_summary`)
+    - 更新所有组件使用统一字段名（DashboardView, RecommendResultList, CandidateAnalysisCard, InterviewSetup, CandidateSelector, useScreeningUtils, useResumeDetail）
+    - _Requirements: 7.2, 7.3_
+  - [x] 8.2 添加缺失的类型定义
+    - 更新 `PaginatedResponse` 匹配后端分页格式 (`items`, `total`, `page`, `page_size`)
+    - 前端编译验证通过 ✓
+    - _Requirements: 3.2_
+  - [x] 8.3 编写属性测试：前后端字段一致性
+    - **Property 9: 前后端字段一致性**（16个测试全部通过）
+    - 测试文件：`tests/test_field_consistency_properties.py`
+    - **Validates: Requirements 7.2**
+
+- [ ] 9. 前端组件更新
+  - [ ] 9.1 更新简历库相关组件
+    - 修改 `src/views/` 中简历库相关组件使用新的 `libraryApi`
+    - _Requirements: 6.3_
+  - [ ] 9.2 更新简历筛选相关组件
+    - 修改简历筛选相关组件使用更新后的 `screeningApi`
+    - _Requirements: 6.2_
+  - [ ] 9.3 更新其他组件
+    - 检查并更新所有使用API的组件
+    - 确保使用正确的API模块和字段名
+    - _Requirements: 3.1, 7.2_
+
+- [ ] 10. Checkpoint - 确保前端编译通过
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 11. 验证机制实现
+  - [ ] 11.1 创建前后端端点同步检查脚本
+    - 编写脚本比较后端URL配置和前端端点常量
+    - 输出不匹配的端点列表
+    - _Requirements: 8.1_
+  - [ ] 11.2 编写属性测试：端点同步
+    - **Property 12: 前后端端点同步**
+    - **Validates: Requirements 8.1**
+  - [ ] 11.3 编写集成测试
+    - 测试前后端联调
+    - 验证完整的数据流
+    - _Requirements: 8.3_
+
+- [ ] 12. Final Checkpoint - 确保所有测试通过
+  - Ensure all tests pass, ask the user if questions arise.

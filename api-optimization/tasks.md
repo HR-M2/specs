@@ -169,27 +169,27 @@
     - 确保使用正确的API模块和字段名
     - _Requirements: 3.1, 7.2_
 
-- [ ] 10. 前后端数据格式一致性检查
-  - [ ] 10.0 更新API文档
-    - 运行 `python Docs/生成API文档.py` 更新最新的API文档
-    - 确保 `Docs/openapi.json` 和 `Docs/API参考文档.md` 是最新的
-  - [ ] 10.1 系统性检查所有API的请求/响应格式
+- [x] 10. 前后端数据格式一致性检查 ✓
+  - [x] 10.0 更新API文档
+    - 运行 `python Docs/生成API文档.py` 更新最新的API文档（50个端点）
+    - `Docs/openapi.json` 和 `Docs/API参考文档.md` 已更新
+  - [x] 10.1 系统性检查所有API的请求/响应格式
     - 对比后端视图返回的数据结构与前端API模块期望的格式
-    - 重点检查分页响应、嵌套对象、字段命名
+    - 发现并修复了字段命名不一致问题
     - _Requirements: 7.2, 3.1_
-  - [ ] 10.2 修复发现的不匹配问题
+  - [x] 10.2 修复发现的不匹配问题
     - **以后端为准**（后端有统一的 `ApiResponse` 和分页格式，更规范）
     - 修复后端内部不一致：
-      - 统一使用 `screening_score` / `screening_summary`（而非 `scores` / `summary`）
-      - 视频 API 统一使用 `id`（而非 `video_id`）
+      - 统一使用 `screening_score` / `screening_summary`（5个视图文件已修复）
+      - 视频 API 统一使用 `id`（`video_analysis/views.py` + 嵌套对象）
     - 前端适配后端规范：
-      - 移除 `mapResumeDataFields` / `mapVideoFields` 映射函数
+      - 简化 `getResumeDetail()` 移除字段映射逻辑
       - 列表接口接受后端的 `items` 字段（通用规范）
     - _Requirements: 7.2_
-  - [ ] 10.3 编写前后端格式一致性测试
-    - 创建自动化测试验证关键API的数据格式
-    - 防止后续修改引入不一致
-    - _Requirements: 8.3_
+  - [x] 10.3 编写前后端格式一致性测试（10个测试全部通过）
+    - 测试文件：`tests/test_data_format_consistency.py`
+    - Property 11: 数据格式一致性
+    - **Validates: Requirements 7.2, 3.1, 8.3**
 
 - [ ] 11. Checkpoint - 确保前端编译通过
   - Ensure all tests pass, ask the user if questions arise.

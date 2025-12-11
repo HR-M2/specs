@@ -178,8 +178,13 @@
     - 重点检查分页响应、嵌套对象、字段命名
     - _Requirements: 7.2, 3.1_
   - [ ] 10.2 修复发现的不匹配问题
-    - 优先在前端API层添加映射（保持后端稳定）
-    - 记录所有映射关系到文档
+    - **以后端为准**（后端有统一的 `ApiResponse` 和分页格式，更规范）
+    - 修复后端内部不一致：
+      - 统一使用 `screening_score` / `screening_summary`（而非 `scores` / `summary`）
+      - 视频 API 统一使用 `id`（而非 `video_id`）
+    - 前端适配后端规范：
+      - 移除 `mapResumeDataFields` / `mapVideoFields` 映射函数
+      - 列表接口接受后端的 `items` 字段（通用规范）
     - _Requirements: 7.2_
   - [ ] 10.3 编写前后端格式一致性测试
     - 创建自动化测试验证关键API的数据格式

@@ -1042,3 +1042,135 @@ pytest tests/test_field_consistency_properties.py -v  # 16 passed ✅
 - ✅ Requirement 7.2: 前端TypeScript接口字段名与后端保持一致
 - ✅ Requirement 7.3: 统一为单一命名，移除冗余别名
 - ✅ Requirement 3.2: 为API响应提供完整的TypeScript类型定义
+
+---
+
+## Task 9: 前端组件更新 ✅
+
+**完成时间**: 2025-12-12
+
+### 9.1 更新简历库相关组件
+
+**目标**: 确保简历库相关组件使用新的 `libraryApi`
+
+#### 验证的组件和 Composables
+
+| 文件 | API 使用 | 状态 |
+|------|----------|------|
+| `views/ResumeLibraryView.vue` | `libraryApi` | ✅ 正确 |
+| `composables/useResumeLibrary.ts` | `libraryApi` | ✅ 正确 |
+| `components/screening/ResumeUpload.vue` | `libraryApi.getList()` | ✅ 正确 |
+
+#### 修复的问题
+
+**问题**: 简历库页面显示"暂无数据"，但总数显示14份
+
+**根因**: 后端 `ApiResponse.paginated()` 返回 `data.items`，但前端 `libraryApi.getList()` 期望 `resumes` 字段
+
+**修复文件**: `src/api/index.ts`
+
+```typescript
+// 修复前
+const result = await apiClient.get(url) as unknown as {
+  resumes: LibraryResume[]  // 期望 resumes，但后端返回 items
+  ...
+}
+return result || { resumes: [], ... }
+
+// 修复后
+const result = await apiClient.get(url) as unknown as {
+  items: LibraryResume[]  // 后端实际返回 items
+  ...
+}
+// 映射为前端期望的 resumes
+return {
+  resumes: result?.items || [],
+  total: result?.total || 0,
+  page: result?.page || 1,
+  page_size: result?.page_size || 20
+}
+```
+
+### 9.2 更新简历筛选相关组件
+
+**目标**: 确保简历筛选相关组件使用更新后的 `screeningApi`
+
+#### 验证的 Composables
+
+| 文件 | API 方法 | 状态 |
+|------|----------|------|
+| `useTaskPolling.ts` | `screeningApi.getTaskStatus()` | ✅ 正确 |
+| `useHistoryTasks.ts` | `screeningApi.getTaskHistory()`, `deleteTask()` | ✅ 正确 |
+| `useResumeUpload.ts` | `screeningApi.submitScreening()` | ✅ 正确 |
+| `useResumeAssignment.ts` | `screeningApi.getAvailableResumes()` | ✅ 正确 |
+| `useResumeDetail.ts` | `screeningApi.getResumeDetail()`, `downloadReportWithFilename()` | ✅ 正确 |
+
+#### 修复的问题
+
+**问题**: `screeningApi.getResumeDetail()` 字段映射不正确
+
+**根因**: 后端返回 `{ report: { scores: {...}, summary: "..." } }`，但前端期望 `screening_score` 和 `screening_summary`
+
+**修复文件**: `src/api/index.ts`
+
+```typescript
+// 修复前 - 未正确提取 report 对象
+const report = await apiClient.get(...) as unknown as Record<string, unknown>
+return {
+  screening_score: report.screening_score,  // 直接访问，但后端返回的是 report.scores
+  screening_summary: report.screening_summary,  // 直接访问，但后端返回的是 report.summary
+}
+
+// 修复后 - 正确提取并映射字段
+const result = await apiClient.get(...) as unknown as { report: Record<string, unknown> }
+const report = result.report || result as unknown as Record<string, unknown>
+return {
+  screening_score: (report.scores || report.screening_score) as ResumeData['screening_score'],
+  screening_summary: (report.summary || report.screening_summary) as string,
+}
+```
+
+### 9.3 更新其他组件
+
+**目标**: 确保所有使用 API 的组件使用正确的 API 模块和字段名
+
+#### 验证的视图组件
+
+| 文件 | API 模块 | 状态 |
+|------|----------|------|
+| `DashboardView.vue` | `screeningApi`, `videoApi`, `positionApi` | ✅ 正确 |
+| `PositionsView.vue` | `positionApi` (通过 usePositionEditor) | ✅ 正确 |
+| `VideoView.vue` | `videoApi`, `positionApi` | ✅ 正确 |
+| `InterviewView.vue` | `interviewAssistApi` (通过 useInterviewAssist) | ✅ 正确 |
+| `RecommendView.vue` | `positionApi`, `recommendApi`, `interviewAssistApi` | ✅ 正确 |
+| `DevToolsView.vue` | `devToolsApi` (通过 ResumeGenerator 组件) | ✅ 正确 |
+
+#### 组件架构验证
+
+- screening 组件目录下的组件（`TaskHistory.vue`, `ProcessingQueue.vue` 等）不直接调用 API
+- API 调用统一在 composables 中完成，组件通过 props/emit 交互 ✅
+
+### 9.4 验证结果
+
+```bash
+npm run build  # Exit code: 0 ✅
+```
+
+前端编译通过，无类型错误。
+
+### 9.5 变更文件清单
+
+| 文件 | 变更类型 | 说明 |
+|------|----------|------|
+| `src/api/index.ts` | 修改 | 修复 `libraryApi.getList()` 字段映射 (items → resumes) |
+| `src/api/index.ts` | 修改 | 修复 `screeningApi.getResumeDetail()` 字段映射 (scores/summary → screening_score/screening_summary) |
+
+### 9.6 前后端字段映射汇总
+
+本任务发现并修复的前后端不匹配问题：
+
+| API方法 | 后端返回 | 前端期望 | 修复方式 |
+|---------|----------|----------|----------|
+| `libraryApi.getList()` | `data.items` | `resumes` | 在API层映射 |
+| `screeningApi.getResumeDetail()` | `data.report.scores` | `screening_score` | 在API层映射 |
+| `screeningApi.getResumeDetail()` | `data.report.summary` | `screening_summary` | 在API层映射 |

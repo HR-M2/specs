@@ -155,33 +155,52 @@
     - 测试文件：`tests/test_field_consistency_properties.py`
     - **Validates: Requirements 7.2**
 
-- [ ] 9. 前端组件更新
-  - [ ] 9.1 更新简历库相关组件
+- [x] 9. 前端组件更新 ✓
+  - [x] 9.1 更新简历库相关组件
     - 修改 `src/views/` 中简历库相关组件使用新的 `libraryApi`
+    - 修复 `libraryApi.getList()` 字段映射 (items → resumes)
     - _Requirements: 6.3_
-  - [ ] 9.2 更新简历筛选相关组件
+  - [x] 9.2 更新简历筛选相关组件
     - 修改简历筛选相关组件使用更新后的 `screeningApi`
+    - 修复 `screeningApi.getResumeDetail()` 字段映射 (scores/summary → screening_score/screening_summary)
     - _Requirements: 6.2_
-  - [ ] 9.3 更新其他组件
+  - [x] 9.3 更新其他组件
     - 检查并更新所有使用API的组件
     - 确保使用正确的API模块和字段名
     - _Requirements: 3.1, 7.2_
 
-- [ ] 10. Checkpoint - 确保前端编译通过
+- [ ] 10. 前后端数据格式一致性检查
+  - [ ] 10.0 更新API文档
+    - 运行 `python Docs/生成API文档.py` 更新最新的API文档
+    - 确保 `Docs/openapi.json` 和 `Docs/API参考文档.md` 是最新的
+  - [ ] 10.1 系统性检查所有API的请求/响应格式
+    - 对比后端视图返回的数据结构与前端API模块期望的格式
+    - 重点检查分页响应、嵌套对象、字段命名
+    - _Requirements: 7.2, 3.1_
+  - [ ] 10.2 修复发现的不匹配问题
+    - 优先在前端API层添加映射（保持后端稳定）
+    - 记录所有映射关系到文档
+    - _Requirements: 7.2_
+  - [ ] 10.3 编写前后端格式一致性测试
+    - 创建自动化测试验证关键API的数据格式
+    - 防止后续修改引入不一致
+    - _Requirements: 8.3_
+
+- [ ] 11. Checkpoint - 确保前端编译通过
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. 验证机制实现
-  - [ ] 11.1 创建前后端端点同步检查脚本
+- [ ] 12. 验证机制实现
+  - [ ] 12.1 创建前后端端点同步检查脚本
     - 编写脚本比较后端URL配置和前端端点常量
     - 输出不匹配的端点列表
     - _Requirements: 8.1_
-  - [ ] 11.2 编写属性测试：端点同步
+  - [ ] 12.2 编写属性测试：端点同步
     - **Property 12: 前后端端点同步**
     - **Validates: Requirements 8.1**
-  - [ ] 11.3 编写集成测试
+  - [ ] 12.3 编写集成测试
     - 测试前后端联调
     - 验证完整的数据流
     - _Requirements: 8.3_
 
-- [ ] 12. Final Checkpoint - 确保所有测试通过
+- [ ] 13. Final Checkpoint - 确保所有测试通过
   - Ensure all tests pass, ask the user if questions arise.

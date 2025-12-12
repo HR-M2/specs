@@ -1174,3 +1174,580 @@ npm run build  # Exit code: 0 ✅
 | `libraryApi.getList()` | `data.items` | `resumes` | 在API层映射 |
 | `screeningApi.getResumeDetail()` | `data.report.scores` | `screening_score` | 在API层映射 |
 | `screeningApi.getResumeDetail()` | `data.report.summary` | `screening_summary` | 在API层映射 |
+
+---
+
+## Task 10: 前后端数据格式一致性检查 ✅
+
+**完成时间**: 2025-12-12
+
+### 10.0 更新API文档
+
+运行 `python Docs/生成API文档.py` 更新文档。
+
+**结果**:
+- ✅ 找到 50 个 API 端点
+- ✅ `Docs/openapi.json` 已更新
+- ✅ `Docs/API参考文档.md` 已更新
+
+### 10.1 系统性检查所有API的请求/响应格式
+
+对比后端视图返回的数据结构与前端 API 模块期望的格式，发现以下不一致：
+
+| 问题类型 | 后端字段 | 应统一为 | 涉及文件 |
+|---------|----------|----------|----------|
+| 筛选分数字段名 | `scores` | `screening_score` | 5个视图文件 |
+| 筛选摘要字段名 | `summary` → `.screening_summary` | `screening_summary` | 5个视图文件 |
+| 视频ID字段名 | `video_id` | `id` | `video_analysis/views.py` + 嵌套对象 |
+
+### 10.2 修复发现的不匹配问题
+
+#### 10.2.1 后端字段统一：`scores` / `summary` → `screening_score` / `screening_summary`
+
+**修改文件**:
+
+| 文件 | 修改内容 |
+|------|----------|
+| `apps/resume_screening/views/resume_data.py` | 第125-131行：`scores` → `screening_score`, `summary` → `screening_summary` |
+| `apps/resume_screening/views/task.py` | 第105-106行：`scores` → `screening_score`, `summary` → `screening_summary` |
+| `apps/resume_screening/views/screening.py` | 第221-222行：`scores` → `screening_score`, `summary` → `screening_summary` |
+| `apps/resume_screening/views/resume_group.py` | 第138-139行：`scores` → `screening_score`, `summary` → `screening_summary` |
+| `apps/final_recommend/views.py` | 第74行：`summary` → `screening_summary` |
+
+**代码变更示例**:
+
+```python
+# 修改前
+data = {
+    "scores": resume_data.screening_score,
+    "summary": resume_data.screening_summary,
+}
+
+# 修改后
+data = {
+    "screening_score": resume_data.screening_score,
+    "screening_summary": resume_data.screening_summary,
+}
+```
+
+#### 10.2.2 后端字段统一：`video_id` → `id`
+
+**修改文件**:
+
+| 文件 | 修改位置 |
+|------|----------|
+| `apps/video_analysis/views.py` | 第64-70行, 第107-113行, 第162-165行, 第203-210行 |
+| `apps/resume_screening/views/resume_data.py` | 第60-61行（嵌套 video_analysis 对象） |
+| `apps/resume_screening/views/task.py` | 第115行（嵌套 video_analysis 对象） |
+| `apps/resume_screening/views/screening.py` | 第232行（嵌套 video_analysis 对象） |
+| `apps/resume_screening/views/resume_group.py` | 第147行（嵌套 video_analysis 对象） |
+
+**代码变更示例**:
+
+```python
+# 修改前 - video_analysis/views.py
+response_data = {
+    "video_id": str(video_analysis.id),
+    "video_name": video_analysis.video_name,
+    ...
+}
+
+# 修改后
+response_data = {
+    "id": str(video_analysis.id),
+    "video_name": video_analysis.video_name,
+    ...
+}
+```
+
+#### 10.2.3 前端适配：移除字段映射逻辑
+
+**修改文件**: `src/api/index.ts`
+
+```typescript
+// 修改前 - 手动映射字段
+getResumeDetail: async (resumeId: string): Promise<ResumeData | null> => {
+  const result = await apiClient.get(...) as unknown as { report: Record<string, unknown> }
+  const report = result.report || result as unknown as Record<string, unknown>
+  // 映射字段名称：后端 scores → screening_score，summary → screening_summary
+  return {
+    id: report.id as string,
+    candidate_name: report.candidate_name as string,
+    position_title: report.position_title as string,
+    resume_content: report.resume_content as string,
+    screening_score: (report.scores || report.screening_score) as ResumeData['screening_score'],
+    screening_summary: (report.summary || report.screening_summary) as string,
+    created_at: report.created_at as string
+  }
+}
+
+// 修改后 - 后端已统一字段名，直接使用
+getResumeDetail: async (resumeId: string): Promise<ResumeData | null> => {
+  try {
+    const result = await apiClient.get(ENDPOINTS.SCREENING_REPORT(resumeId)) as unknown as { report: ResumeData }
+    return result.report || null
+  } catch {
+    return null
+  }
+}
+```
+
+### 10.3 编写前后端格式一致性测试
+
+**新增文件**: `tests/test_data_format_consistency.py`
+
+#### 测试类结构
+
+| 测试类 | 测试数量 | 说明 |
+|--------|----------|------|
+| `TestFieldNamingConsistency` | 3 | 字段命名规范验证 |
+| `TestPaginatedResponseFormat` | 2 | 分页响应格式验证 |
+| `TestFrontendBackendFieldAlignment` | 3 | 前后端字段对齐验证 |
+| `TestDataFormatRegressionPrevention` | 2 | 回归测试防护 |
+| **总计** | **10** | **Property 11: 数据格式一致性** |
+
+#### 测试用例详情
+
+**TestFieldNamingConsistency**:
+
+```python
+def test_no_scores_field_in_responses(self):
+    """验证视图返回中不使用 'scores' 作为返回字段名（应使用 screening_score）"""
+
+def test_no_summary_mapping_screening_summary(self):
+    """验证视图返回中不使用 'summary' 字段来映射 .screening_summary"""
+
+def test_video_api_uses_id_not_video_id(self):
+    """验证视频API返回中使用 'id' 而非 'video_id'"""
+```
+
+**TestPaginatedResponseFormat**:
+
+```python
+def test_paginated_response_uses_items(self):
+    """验证 ApiResponse.paginated() 使用 'items' 字段"""
+
+def test_paginated_response_structure(self):
+    """验证分页响应包含必要字段: items, total, page, page_size"""
+```
+
+**TestFrontendBackendFieldAlignment**:
+
+```python
+def test_resume_data_fields_match(self):
+    """验证 ResumeData 类型的关键字段与后端一致"""
+
+def test_video_analysis_uses_id(self):
+    """验证 VideoAnalysis 类型使用 'id' 而非 'video_id'"""
+
+def test_paginated_response_type_matches_backend(self):
+    """验证前端 PaginatedResponse 类型与后端格式匹配"""
+```
+
+**TestDataFormatRegressionPrevention**:
+
+```python
+def test_resume_data_detail_view_uses_correct_fields(self):
+    """验证简历数据详情视图使用正确的字段名"""
+
+def test_video_analysis_list_view_uses_id(self):
+    """验证视频分析列表视图使用 'id' 字段"""
+```
+
+### 10.4 验证结果
+
+**后端测试**:
+```
+============= 114 passed, 8 warnings in 7.59s =============
+```
+
+**一致性测试**:
+```
+tests/test_data_format_consistency.py - 10 passed in 0.26s
+```
+
+**前端编译**:
+```
+npm run build
+✓ built in 10.48s
+```
+
+### 10.5 变更文件清单
+
+| 文件 | 变更类型 | 说明 |
+|------|----------|------|
+| `apps/resume_screening/views/resume_data.py` | 修改 | `scores`/`summary` → `screening_score`/`screening_summary`, `video_id` → `id` |
+| `apps/resume_screening/views/task.py` | 修改 | 同上 |
+| `apps/resume_screening/views/screening.py` | 修改 | 同上 |
+| `apps/resume_screening/views/resume_group.py` | 修改 | 同上 |
+| `apps/video_analysis/views.py` | 修改 | `video_id` → `id` (4处) |
+| `apps/final_recommend/views.py` | 修改 | `summary` → `screening_summary` |
+| `src/api/index.ts` | 修改 | 移除 `getResumeDetail()` 字段映射逻辑 |
+| `tests/test_data_format_consistency.py` | **新建** | Property 11: 数据格式一致性测试（10个测试） |
+| `Docs/openapi.json` | 重新生成 | 50个端点 |
+| `Docs/API参考文档.md` | 重新生成 | 更新后的文档 |
+| `.windsurf/specs/api-optimization/tasks.md` | 修改 | 标记 Task 10 完成 |
+
+### 10.6 数据格式规范总结
+
+经过本次一致性检查，确立以下数据格式规范：
+
+| 规范 | 说明 |
+|------|------|
+| **筛选分数字段** | 统一使用 `screening_score`（非 `scores`） |
+| **筛选摘要字段** | 统一使用 `screening_summary`（非 `summary` 映射 `screening_summary`） |
+| **视频ID字段** | 统一使用 `id`（非 `video_id`），与其他资源保持一致 |
+| **分页响应格式** | `{ items, total, page, page_size }` |
+| **统一响应格式** | `{ code, message, data }` |
+
+**自动化防护**: `test_data_format_consistency.py` 中的10个测试将在CI中持续运行，防止后续修改引入格式不一致。
+
+---
+
+## Task 11: Checkpoint - 确保前端编译通过 ✅
+
+**完成时间**: 2025-12-12
+
+### 11.1 执行前端编译检查
+
+**命令**: `npm run build`
+
+**工作目录**: `HRM2-Vue-Frontend_new/`
+
+**编译流程**:
+
+| 阶段 | 命令 | 结果 |
+|------|------|------|
+| TypeScript类型检查 | `vue-tsc --build` | ✅ 通过 |
+| Vite生产构建 | `vite build` | ✅ 成功 |
+
+### 11.2 编译结果详情
+
+```
+vite v7.2.6 building client environment for production...
+✓ 2010 modules transformed.
+✓ built in 11.66s
+```
+
+**产物统计**:
+
+| 类型 | 文件数 | 说明 |
+|------|--------|------|
+| CSS文件 | 12 | 各视图样式文件 |
+| JS文件 | 15 | 应用代码和依赖 |
+| 入口文件 | 1 | `index.html` |
+
+**主要产物大小**:
+
+| 文件 | 大小 | gzip |
+|------|------|------|
+| `index-B3isWZNO.js` | 1,014 kB | 333 kB |
+| `index-TYA5M57h.js` | 500 kB | 130 kB |
+| `pdf-DSg--3dR.js` | 407 kB | 119 kB |
+| `index-DmPGS3NK.css` | 349 kB | 48 kB |
+
+### 11.3 编译警告
+
+收到chunk大小警告（>500KB），属于优化建议，不影响功能：
+
+```
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking
+```
+
+**后续优化建议**（非阻塞）:
+- 考虑对大型依赖（如PDF.js）进行动态导入
+- 配置 `manualChunks` 优化代码分割
+
+### 11.4 检查点验收
+
+| 检查项 | 状态 |
+|--------|------|
+| TypeScript类型检查通过 | ✅ |
+| Vite生产构建成功 | ✅ |
+| 无编译错误 | ✅ |
+| 所有模块正确转换 | ✅ (2010个) |
+
+### 11.5 变更文件清单
+
+| 文件 | 变更类型 | 说明 |
+|------|----------|------|
+| `.windsurf/specs/api-optimization/tasks.md` | 修改 | 标记 Task 11 完成 |
+| `.windsurf/specs/api-optimization/changelog.md` | 修改 | 记录 Task 11 变更内容 |
+
+---
+
+## Task 12: 验证机制实现 ✅
+
+**完成时间**: 2025-12-12
+
+### 12.1 创建前后端端点同步检查脚本
+
+**新增文件**: `.windsurf/specs/api-optimization/scripts/check_endpoint_sync.py`
+
+功能：
+- 解析后端 Django URL 配置（6个模块的 `urls.py`）
+- 解析前端 TypeScript 端点常量（`src/api/endpoints.ts`）
+- 规范化路径参数进行比较
+- 输出同步状态报告
+
+运行结果：
+```
+✅ 已匹配端点: 37 个
+✅ 没有仅后端存在的端点
+✅ 没有仅前端存在的端点
+✅ 检查结果: 所有端点已同步
+```
+
+### 12.2 编写属性测试：端点同步
+
+**新增文件**: `tests/test_endpoint_sync_properties.py`
+
+测试类和数量：
+
+| 测试类 | 测试数量 | 说明 |
+|--------|----------|------|
+| `TestEndpointSync` | 12 | 验证前后端端点同步状态 |
+| `TestEndpointNamingConsistency` | 3 | 验证端点命名规范 |
+| `TestEndpointStructure` | 3 | 验证端点结构完整性 |
+| **总计** | **18** | **全部通过** ✅ |
+
+主要测试项：
+- 前端端点文件存在性
+- 所有模块的后端URL和前端端点定义
+- 各模块端点同步状态
+- 后端路径使用 kebab-case
+- 前端常量使用 SCREAMING_SNAKE_CASE
+- 主URL配置的模块注册和API前缀
+
+### 12.3 编写集成测试
+
+**新增文件**: `tests/test_integration.py`
+
+测试类和数量：
+
+| 测试类 | 测试数量 | 说明 |
+|--------|----------|------|
+| `TestUnifiedResponseFormat` | 7 | 验证统一响应格式 `{code, message, data}` |
+| `TestPaginatedResponseFormat` | 4 | 验证分页响应格式 |
+| `TestErrorResponseFormat` | 3 | 验证错误响应格式 |
+| `TestDataFlowIntegrity` | 4 | 验证数据流完整性 |
+| `TestCrossModuleIntegration` | 2 | 验证跨模块集成 |
+| `TestFieldNamingConsistency` | 2 | 验证字段命名一致性 |
+| **总计** | **22** | **全部通过** ✅ |
+
+### 12.4 检查点验收
+
+**全部测试运行结果**:
+
+```
+================== 154 passed, 8 warnings ==================
+```
+
+| 测试文件 | 测试数量 |
+|----------|----------|
+| `test_api_response_properties.py` | 14 |
+| `test_api_url_properties.py` | 9 |
+| `test_data_format_consistency.py` | 10 |
+| `test_endpoint_sync_properties.py` | 18 |
+| `test_field_consistency_properties.py` | 16 |
+| `test_integration.py` | 22 |
+| `test_openapi_schema_properties.py` | 16 |
+| `test_resume_screening.py` | 24 |
+| `test_video_analysis.py` | 4 |
+| `test_view_documentation_properties.py` | 41 |
+| **总计** | **154** |
+
+### 12.5 变更文件清单
+
+| 文件 | 变更类型 | 说明 |
+|------|----------|------|
+| `.windsurf/specs/api-optimization/scripts/check_endpoint_sync.py` | 新增 | 前后端端点同步检查脚本 |
+| `tests/test_endpoint_sync_properties.py` | 新增 | 端点同步属性测试 (18个) |
+| `tests/test_integration.py` | 新增 | 前后端集成测试 (22个) |
+| `.windsurf/specs/api-optimization/tasks.md` | 修改 | 标记 Task 12 完成 |
+| `.windsurf/specs/api-optimization/changelog.md` | 修改 | 记录 Task 12 变更内容 |
+
+---
+
+## Task 13: Final Checkpoint - 确保所有测试通过 ✅
+
+**完成时间**: 2025-12-12
+
+### 13.1 后端测试验收
+
+运行命令: `python -m pytest --tb=short -v`
+
+**结果**: 178 passed, 7 warnings
+
+| 测试文件 | 测试数量 |
+|----------|----------|
+| `test_api_response_properties.py` | 14 |
+| `test_api_url_properties.py` | 9 |
+| `test_data_format_consistency.py` | 10 |
+| `test_endpoint_sync_properties.py` | 18 |
+| `test_field_consistency_properties.py` | 16 |
+| `test_integration.py` | 22 |
+| `test_openapi_schema_properties.py` | 16 |
+| `test_resume_library.py` | 24 |
+| `test_resume_screening.py` | 4 |
+| `test_video_analysis.py` | 6 |
+| `test_view_documentation_properties.py` | 41 |
+| (其他) | 18 |
+| **总计** | **178** |
+
+**警告说明**: 7 个警告均来自第三方库（jsonschema、pydantic、autogen）的弃用提示，不影响测试功能。
+
+### 13.2 前端验收
+
+运行命令: `npm run build`
+
+**结果**:
+- TypeScript 类型检查: ✓ 通过 (vue-tsc --build)
+- Vite 生产构建: ✓ 2010 modules transformed, built in 13.56s
+
+### 13.3 API优化任务完成总结
+
+| 任务 | 描述 | 状态 |
+|------|------|------|
+| Task 1 | 后端基础设施准备 | ✅ |
+| Task 2 | 简历库模块解耦 | ✅ |
+| Task 3 | 后端URL路由重构 | ✅ |
+| Task 4 | 后端视图层重构 | ✅ |
+| Task 5 | Checkpoint - 后端测试 | ✅ |
+| Task 6 | 废弃API清理与文档更新 | ✅ |
+| Task 7 | 前端API模块重构 | ✅ |
+| Task 8 | 前端类型定义更新 | ✅ |
+| Task 9 | 前端组件更新 | ✅ |
+| Task 10 | 前后端数据格式一致性检查 | ✅ |
+| Task 11 | Checkpoint - 前端编译 | ✅ |
+| Task 12 | 验证机制实现 | ✅ |
+| Task 13 | Final Checkpoint | ✅ |
+
+**主要成果**:
+- 统一 `/api/` 前缀的 RESTful API 设计
+- 统一 `{code, message, data}` 响应格式
+- 简历库模块独立解耦
+- 前后端端点完全同步 (37个端点)
+- 178 个后端属性测试和集成测试
+- 完整的 OpenAPI 文档 (50个端点)
+
+---
+
+## 14. 后续修复
+
+### 14.1 简历生成 API 超时修复 (2025-12-12)
+
+**问题**: 开发测试工具的简历生成功能报错 `timeout of 30000ms exceeded`
+
+**原因分析**:
+- 后端 `DevToolsService.generate_batch_resumes()` 串行调用 LLM 生成每份简历
+- 每份简历约需 10-15 秒，生成 5 份需要 55-80 秒
+- 前端 `apiClient` 默认超时 30 秒，请求被中断
+
+**日志证据**:
+```
+duration_ms: 55750.12 + Broken pipe
+duration_ms: 80182.34 + Broken pipe
+```
+
+**修复方案**: 为 `devToolsApi.generateResumes` 设置动态超时时间
+
+**修改文件**: `HRM2-Vue-Frontend_new/src/api/index.ts`
+
+```typescript
+// 每份简历约需 10-15 秒，设置超时 = 数量 * 20秒 + 30秒缓冲，最少120秒
+const timeout = Math.max(120000, params.count * 20000 + 30000)
+return await apiClient.post(ENDPOINTS.SCREENING_DEV_GENERATE, params, { timeout })
+```
+
+**状态**: ✅ 已修复
+
+### 14.2 简历初筛提交失败修复 (2025-12-12)
+
+**问题**: 提交简历初筛报错 `简历筛选任务已提交，正在后台处理`
+
+**原因分析**:
+- 后端 `ApiResponse.accepted()` 返回 `code: 202` 表示异步任务已接受
+- 前端响应拦截器只允许 `code === 200`，把 202 当作业务错误抛出
+
+**修复方案**: 修改前端拦截器接受 200/201/202 作为成功响应
+
+**修改文件**: `HRM2-Vue-Frontend_new/src/api/config.ts`
+
+```typescript
+// 业务错误（code 不在成功范围内）
+// 200: OK, 201: Created, 202: Accepted
+if (![200, 201, 202].includes(code)) {
+  console.error('API Business Error:', { code, message, data })
+  return Promise.reject(new ApiError(code, message, data))
+}
+```
+
+**状态**: ✅ 已修复
+
+### 14.3 面试辅助 API 超时修复 (2025-12-12)
+
+**问题**: 选择候选人时获取问题池失败 `timeout of 30000ms exceeded`
+
+**原因分析**:
+- 后端 `GenerateQuestionsView` 串行调用 3 次 LLM：
+  1. `generate_resume_based_questions()` - 简历问题 + 兴趣点
+  2. `generate_skill_based_questions('专业能力')`
+  3. `generate_skill_based_questions('行为面试')`
+- 每次 LLM 调用约 10-20 秒，总耗时可达 30-60 秒
+- 前端默认超时 30 秒
+
+**修复方案**: 为涉及 LLM 的面试辅助 API 增加超时时间
+
+**修改文件**: `HRM2-Vue-Frontend_new/src/api/index.ts`
+
+```typescript
+// generateQuestions: 90 秒（3 次串行 LLM 调用）
+return await apiClient.post(url, params, { timeout: 90000 })
+
+// recordQA: 60 秒（1 次 LLM 调用）
+return await apiClient.post(url, data, { timeout: 60000 })
+
+// generateReport: 60 秒（1 次 LLM 调用）
+return await apiClient.post(url, params, { timeout: 60000 })
+```
+
+**状态**: ✅ 已修复
+
+### 14.4 综合分析 API 超时修复 (2025-12-12)
+
+**问题**: 综合分析失败 `timeout of 30000ms exceeded`
+
+**原因**: `analyzeCandidate` 调用 LLM 进行多维度分析，耗时超过默认 30 秒
+
+**修复**: 为综合分析 API 设置 120 秒超时
+
+**修改文件**: `HRM2-Vue-Frontend_new/src/api/index.ts`
+
+```typescript
+analyzeCandidate: async (resumeId: string) => {
+  return await apiClient.post(ENDPOINTS.RECOMMEND_ANALYSIS(resumeId), null, {
+    timeout: 120000  // AI分析需要更长时间
+  })
+}
+```
+
+**状态**: ✅ 已修复
+
+### 14.5 全局默认超时调整 (2025-12-12)
+
+**变更**: 将 `apiClient` 默认超时从 30 秒调整为 60 秒
+
+**修改文件**: `HRM2-Vue-Frontend_new/src/api/config.ts`
+
+```typescript
+export const apiClient = axios.create({
+  baseURL: API_BASE,
+  timeout: 60000,  // 从 30000 调整为 60000
+  ...
+})
+```
+
+**状态**: ✅ 已完成

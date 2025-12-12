@@ -1,197 +1,182 @@
-# Requirements Document
+# 需求文档
 
-## Introduction
+## 简介
 
-本项目旨在创建一个全新的 FastAPI 后端项目，完全替代现有的 Django 后端（HRM2-Django-Backend）功能。新后端必须与现有 Vue 前端（HRM2-Vue-Frontend_new）完全兼容，确保前端零改动即可正常工作。
+本项目旨在创建一个全新的 FastAPI 后端项目，完全替代现有的 Django 后端（HRM2-Django-Backend）功能。新后端必须保持与现有 Vue 前端（HRM2-Vue-Frontend_new）的完全兼容，确保前端零改动即可切换后端。
 
-核心目标：
-- 保持 API 完全兼容（URL、方法、请求/响应格式）
-- 自由设计优化的数据库结构
-- 独立项目目录，不修改原 Django 项目
+## 术语表
 
-## Glossary
+- **HRM_System**: 智能招聘管理系统（Human Resource Management System）
+- **FastAPI_Backend**: 基于 FastAPI 框架的新后端服务
+- **API_Endpoint**: 后端提供的 HTTP 接口端点
+- **Resume**: 简历，候选人的求职文档
+- **Position**: 岗位，招聘职位及其要求标准
+- **Screening**: 筛选，对简历进行 AI 初步评估的过程
+- **Interview_Session**: 面试会话，面试辅助系统中的一次面试记录
+- **Resume_Data**: 筛选后的简历数据，包含 AI 分析结果
+- **Resume_Group**: 简历组，用于批量管理筛选后的简历
+- **Video_Analysis**: 视频分析，对面试视频进行 AI 分析（预留功能）
+- **Comprehensive_Analysis**: 综合分析，对候选人进行最终评估推荐
 
-- **HRM_FastAPI_System**: 新建的 FastAPI 后端系统
-- **API_Response**: 统一响应格式 `{code: number, message: string, data: T}`
-- **Position**: 岗位招聘标准，包含职位名称、技能要求、经验要求等
-- **ResumeLibrary**: 简历库，存储上传的原始简历
-- **ResumeData**: 筛选后的简历数据，包含评分和分析结果
-- **ScreeningTask**: 简历筛选任务，异步处理简历评估
-- **InterviewSession**: 面试辅助会话，记录问答和评估
-- **VideoAnalysis**: 视频分析记录，存储面试视频分析结果
-- **ComprehensiveAnalysis**: 综合分析结果，多维度候选人评估
+## 需求
 
-## Requirements
+### 需求 1
 
-### Requirement 1: API 响应格式兼容
+**用户故事:** 作为前端开发者，我希望新后端保持与现有 API 完全兼容，以便无需修改前端代码即可切换后端。
 
-**User Story:** As a 前端开发者, I want 后端返回统一的响应格式, so that 前端无需修改即可正常解析数据。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 前端调用任意 API 端点 THEN FastAPI_Backend SHALL 返回与 Django 后端相同结构的 JSON 响应
+2. WHEN 前端发送请求 THEN FastAPI_Backend SHALL 接受相同的请求参数格式和数据结构
+3. THE FastAPI_Backend SHALL 保持所有 49 个 API 端点的 URL 路径与 Django 后端完全一致
+4. THE FastAPI_Backend SHALL 使用统一的响应格式 `{code: number, message: string, data: any}`
+5. WHEN 业务操作成功 THEN FastAPI_Backend SHALL 返回 code 为 200、201 或 202
+6. WHEN 业务操作失败 THEN FastAPI_Backend SHALL 返回对应的错误 code 和 message
 
-1. WHEN 任何 API 请求成功 THEN THE HRM_FastAPI_System SHALL 返回格式为 `{code: 200|201|202, message: string, data: T}` 的 JSON 响应
-2. WHEN 任何 API 请求失败 THEN THE HRM_FastAPI_System SHALL 返回格式为 `{code: number, message: string, data: null}` 的 JSON 响应，其中 code 为非 200/201/202 的错误码
-3. WHEN 返回分页数据 THEN THE HRM_FastAPI_System SHALL 在 data 字段中包含 `{items: T[], total: number, page: number, page_size: number}` 结构
+### 需求 2
 
-### Requirement 2: 岗位管理 API
+**用户故事:** 作为系统管理员，我希望能够管理岗位设置，以便定义招聘标准和要求。
 
-**User Story:** As a HR 用户, I want 管理岗位招聘标准, so that 可以定义和维护不同岗位的要求。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 GET /api/positions/ THEN FastAPI_Backend SHALL 返回岗位列表，包含 positions 数组和 total 计数
+2. WHEN 用户请求 POST /api/positions/ 并提供岗位数据 THEN FastAPI_Backend SHALL 创建新岗位并返回岗位详情
+3. WHEN 用户请求 GET /api/positions/{position_id}/ THEN FastAPI_Backend SHALL 返回指定岗位的详细信息
+4. WHEN 用户请求 PUT /api/positions/{position_id}/ THEN FastAPI_Backend SHALL 更新岗位信息
+5. WHEN 用户请求 DELETE /api/positions/{position_id}/ THEN FastAPI_Backend SHALL 软删除岗位
+6. WHEN 用户请求 POST /api/positions/{position_id}/resumes/ THEN FastAPI_Backend SHALL 将简历分配到指定岗位
+7. WHEN 用户请求 DELETE /api/positions/{position_id}/resumes/{resume_id}/ THEN FastAPI_Backend SHALL 从岗位移除指定简历
+8. WHEN 用户请求 POST /api/positions/ai/generate/ THEN FastAPI_Backend SHALL 调用 AI 生成岗位要求
 
-1. WHEN 客户端发送 GET 请求到 `/api/positions/` THEN THE HRM_FastAPI_System SHALL 返回岗位列表，包含 `{positions: Position[], total: number}`
-2. WHEN 客户端发送 POST 请求到 `/api/positions/` 并提供岗位数据 THEN THE HRM_FastAPI_System SHALL 创建新岗位并返回创建的岗位对象
-3. WHEN 客户端发送 GET 请求到 `/api/positions/{position_id}/` THEN THE HRM_FastAPI_System SHALL 返回指定岗位的详细信息
-4. WHEN 客户端发送 PUT 请求到 `/api/positions/{position_id}/` THEN THE HRM_FastAPI_System SHALL 更新岗位信息并返回更新后的对象
-5. WHEN 客户端发送 DELETE 请求到 `/api/positions/{position_id}/` THEN THE HRM_FastAPI_System SHALL 软删除岗位（设置 is_active=false）
-6. WHEN 客户端发送 POST 请求到 `/api/positions/{position_id}/resumes/` 并提供 resume_data_ids THEN THE HRM_FastAPI_System SHALL 将简历分配到岗位并返回分配结果
-7. WHEN 客户端发送 DELETE 请求到 `/api/positions/{position_id}/resumes/{resume_id}/` THEN THE HRM_FastAPI_System SHALL 从岗位移除指定简历
-8. WHEN 客户端发送 POST 请求到 `/api/positions/ai/generate/` 并提供描述 THEN THE HRM_FastAPI_System SHALL 调用 AI 生成岗位要求并返回生成的岗位数据
+### 需求 3
 
-### Requirement 3: 简历库 API
+**用户故事:** 作为 HR 人员，我希望能够管理简历库，以便集中存储和检索候选人简历。
 
-**User Story:** As a HR 用户, I want 管理简历库, so that 可以上传、查看和管理候选人简历。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 GET /api/library/ THEN FastAPI_Backend SHALL 返回分页的简历列表，支持 keyword、is_screened、is_assigned 筛选参数
+2. WHEN 用户请求 POST /api/library/ 并上传简历 THEN FastAPI_Backend SHALL 存储简历并返回上传结果，包含 uploaded 和 skipped 列表
+3. WHEN 用户请求 GET /api/library/{id}/ THEN FastAPI_Backend SHALL 返回简历详情
+4. WHEN 用户请求 PUT /api/library/{id}/ THEN FastAPI_Backend SHALL 更新简历信息
+5. WHEN 用户请求 DELETE /api/library/{id}/ THEN FastAPI_Backend SHALL 删除简历
+6. WHEN 用户请求 POST /api/library/batch-delete/ THEN FastAPI_Backend SHALL 批量删除指定简历
+7. WHEN 用户请求 POST /api/library/check-hash/ THEN FastAPI_Backend SHALL 检查文件哈希值是否已存在，防止重复上传
 
-1. WHEN 客户端发送 GET 请求到 `/api/library/` THEN THE HRM_FastAPI_System SHALL 返回简历库列表，支持分页和筛选参数（page, page_size, keyword, is_screened, is_assigned）
-2. WHEN 客户端发送 POST 请求到 `/api/library/` 并提供简历数组 THEN THE HRM_FastAPI_System SHALL 上传简历并返回 `{uploaded: [], skipped: [], uploaded_count, skipped_count}`
-3. WHEN 客户端发送 GET 请求到 `/api/library/{id}/` THEN THE HRM_FastAPI_System SHALL 返回简历详情
-4. WHEN 客户端发送 PUT 请求到 `/api/library/{id}/` THEN THE HRM_FastAPI_System SHALL 更新简历信息（candidate_name, notes）
-5. WHEN 客户端发送 DELETE 请求到 `/api/library/{id}/` THEN THE HRM_FastAPI_System SHALL 删除指定简历
-6. WHEN 客户端发送 POST 请求到 `/api/library/batch-delete/` 并提供 resume_ids THEN THE HRM_FastAPI_System SHALL 批量删除简历
-7. WHEN 客户端发送 POST 请求到 `/api/library/check-hash/` 并提供 hashes 数组 THEN THE HRM_FastAPI_System SHALL 返回 `{exists: Record<string, boolean>, existing_count: number}`
+### 需求 4
 
-### Requirement 4: 简历筛选 API
+**用户故事:** 作为 HR 人员，我希望能够提交简历筛选任务，以便 AI 自动评估候选人与岗位的匹配度。
 
-**User Story:** As a HR 用户, I want 提交简历筛选任务, so that AI 可以自动评估候选人与岗位的匹配度。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 POST /api/screening/ 并提供岗位和简历数据 THEN FastAPI_Backend SHALL 创建筛选任务并返回任务信息
+2. WHEN 用户请求 GET /api/screening/tasks/ THEN FastAPI_Backend SHALL 返回任务历史列表，支持 status、page、page_size 参数
+3. WHEN 用户请求 GET /api/screening/tasks/{task_id}/status/ THEN FastAPI_Backend SHALL 返回任务状态和结果
+4. WHEN 用户请求 DELETE /api/screening/tasks/{task_id}/ THEN FastAPI_Backend SHALL 删除指定任务
+5. WHEN 用户请求 GET /api/screening/reports/{report_id}/ THEN FastAPI_Backend SHALL 返回筛选报告详情
+6. WHEN 用户请求 GET /api/screening/reports/{report_id}/download/ THEN FastAPI_Backend SHALL 返回可下载的 Markdown 报告文件
+7. WHEN 用户请求 GET /api/screening/data/ THEN FastAPI_Backend SHALL 返回筛选后的简历数据列表
 
-1. WHEN 客户端发送 POST 请求到 `/api/screening/` 并提供 position 和 resumes THEN THE HRM_FastAPI_System SHALL 创建筛选任务并返回任务对象
-2. WHEN 客户端发送 GET 请求到 `/api/screening/tasks/` THEN THE HRM_FastAPI_System SHALL 返回任务历史列表，支持 status、page、page_size 参数
-3. WHEN 客户端发送 GET 请求到 `/api/screening/tasks/{task_id}/status/` THEN THE HRM_FastAPI_System SHALL 返回任务状态和进度信息
-4. WHEN 客户端发送 DELETE 请求到 `/api/screening/tasks/{task_id}/` THEN THE HRM_FastAPI_System SHALL 删除指定任务
-5. WHEN 客户端发送 GET 请求到 `/api/screening/reports/{report_id}/` THEN THE HRM_FastAPI_System SHALL 返回简历筛选报告详情
-6. WHEN 客户端发送 GET 请求到 `/api/screening/reports/{report_id}/download/` THEN THE HRM_FastAPI_System SHALL 返回 Markdown 格式的报告文件
-7. WHEN 客户端发送 GET 请求到 `/api/screening/data/` THEN THE HRM_FastAPI_System SHALL 返回筛选后的简历数据列表
-8. WHEN 客户端发送 POST 请求到 `/api/screening/data/` THEN THE HRM_FastAPI_System SHALL 创建新的简历数据记录
+### 需求 5
 
-### Requirement 5: 简历组管理 API
+**用户故事:** 作为 HR 人员，我希望能够管理简历组，以便对筛选后的简历进行分类管理。
 
-**User Story:** As a HR 用户, I want 管理简历组, so that 可以组织和分类筛选后的简历。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 GET /api/screening/groups/ THEN FastAPI_Backend SHALL 返回简历组列表
+2. WHEN 用户请求 POST /api/screening/groups/create/ THEN FastAPI_Backend SHALL 创建新的简历组
+3. WHEN 用户请求 GET /api/screening/groups/{group_id}/ THEN FastAPI_Backend SHALL 返回简历组详情
+4. WHEN 用户请求 POST /api/screening/groups/add-resume/ THEN FastAPI_Backend SHALL 向简历组添加简历
+5. WHEN 用户请求 POST /api/screening/groups/remove-resume/ THEN FastAPI_Backend SHALL 从简历组移除简历
+6. WHEN 用户请求 POST /api/screening/groups/set-status/ THEN FastAPI_Backend SHALL 更新简历组状态
 
-1. WHEN 客户端发送 GET 请求到 `/api/screening/groups/` THEN THE HRM_FastAPI_System SHALL 返回简历组列表
-2. WHEN 客户端发送 POST 请求到 `/api/screening/groups/create/` THEN THE HRM_FastAPI_System SHALL 创建新的简历组
-3. WHEN 客户端发送 GET 请求到 `/api/screening/groups/{group_id}/` THEN THE HRM_FastAPI_System SHALL 返回简历组详情
-4. WHEN 客户端发送 POST 请求到 `/api/screening/groups/add-resume/` THEN THE HRM_FastAPI_System SHALL 向简历组添加简历
-5. WHEN 客户端发送 POST 请求到 `/api/screening/groups/remove-resume/` THEN THE HRM_FastAPI_System SHALL 从简历组移除简历
-6. WHEN 客户端发送 POST 请求到 `/api/screening/groups/set-status/` THEN THE HRM_FastAPI_System SHALL 更新简历组状态
+### 需求 6
 
-### Requirement 6: 视频分析 API
+**用户故事:** 作为 HR 人员，我希望能够关联简历与视频分析，以便综合评估候选人。
 
-**User Story:** As a HR 用户, I want 上传和分析面试视频, so that 可以获取候选人的行为分析结果。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 POST /api/screening/videos/link/ THEN FastAPI_Backend SHALL 建立简历与视频分析的关联
+2. WHEN 用户请求 POST /api/screening/videos/unlink/ THEN FastAPI_Backend SHALL 解除简历与视频分析的关联
 
-1. WHEN 客户端发送 GET 请求到 `/api/videos/` THEN THE HRM_FastAPI_System SHALL 返回视频分析列表
-2. WHEN 客户端发送 POST 请求到 `/api/videos/upload/` 并提供视频文件 THEN THE HRM_FastAPI_System SHALL 上传视频并创建分析任务
-3. WHEN 客户端发送 GET 请求到 `/api/videos/{video_id}/status/` THEN THE HRM_FastAPI_System SHALL 返回视频分析状态和结果
-4. WHEN 客户端发送 POST 请求到 `/api/videos/{video_id}/` THEN THE HRM_FastAPI_System SHALL 更新视频分析结果
-5. WHEN 客户端发送 POST 请求到 `/api/screening/videos/link/` THEN THE HRM_FastAPI_System SHALL 建立简历与视频分析的关联
-6. WHEN 客户端发送 POST 请求到 `/api/screening/videos/unlink/` THEN THE HRM_FastAPI_System SHALL 解除简历与视频分析的关联
+### 需求 7
 
-### Requirement 7: 面试辅助 API
+**用户故事:** 作为开发人员，我希望有开发测试工具，以便快速生成测试数据和调试系统。
 
-**User Story:** As a 面试官, I want 使用 AI 辅助面试, so that 可以获取智能问题建议和回答评估。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 POST /api/screening/dev/generate-resumes/ THEN FastAPI_Backend SHALL 根据岗位要求生成随机简历
+2. WHEN 用户请求 GET/POST /api/screening/dev/force-error/ THEN FastAPI_Backend SHALL 控制是否强制筛选任务失败
+3. WHEN 用户请求 POST /api/screening/dev/reset-state/ THEN FastAPI_Backend SHALL 清除所有测试相关的缓存和状态
 
-1. WHEN 客户端发送 POST 请求到 `/api/interviews/sessions/` 并提供 resume_data_id THEN THE HRM_FastAPI_System SHALL 创建面试会话并返回会话对象
-2. WHEN 客户端发送 GET 请求到 `/api/interviews/sessions/` THEN THE HRM_FastAPI_System SHALL 返回会话列表，支持 resume_id 筛选
-3. WHEN 客户端发送 GET 请求到 `/api/interviews/sessions/{session_id}/` THEN THE HRM_FastAPI_System SHALL 返回会话详情
-4. WHEN 客户端发送 DELETE 请求到 `/api/interviews/sessions/{session_id}/` THEN THE HRM_FastAPI_System SHALL 结束并删除会话
-5. WHEN 客户端发送 POST 请求到 `/api/interviews/sessions/{session_id}/questions/` THEN THE HRM_FastAPI_System SHALL 生成面试问题并返回问题池
-6. WHEN 客户端发送 POST 请求到 `/api/interviews/sessions/{session_id}/qa/` THEN THE HRM_FastAPI_System SHALL 记录问答并返回评估结果和候选问题
-7. WHEN 客户端发送 POST 请求到 `/api/interviews/sessions/{session_id}/report/` THEN THE HRM_FastAPI_System SHALL 生成最终面试报告
+### 需求 8
 
-### Requirement 8: 最终推荐 API
+**用户故事:** 作为 HR 人员，我希望能够上传和分析面试视频，以便获取候选人的非语言表现评估。
 
-**User Story:** As a HR 用户, I want 获取候选人综合分析, so that 可以做出最终录用决策。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 GET /api/videos/ THEN FastAPI_Backend SHALL 返回视频分析列表
+2. WHEN 用户请求 POST /api/videos/upload/ THEN FastAPI_Backend SHALL 上传视频并开始分析任务
+3. WHEN 用户请求 GET /api/videos/{video_id}/status/ THEN FastAPI_Backend SHALL 返回视频分析状态和结果
+4. WHEN 用户请求 POST /api/videos/{video_id}/ THEN FastAPI_Backend SHALL 更新视频分析结果
 
-1. WHEN 客户端发送 GET 请求到 `/api/recommend/stats/` THEN THE HRM_FastAPI_System SHALL 返回已分析候选人统计数据
-2. WHEN 客户端发送 POST 请求到 `/api/recommend/analysis/{resume_id}/` THEN THE HRM_FastAPI_System SHALL 执行综合分析并返回分析结果
-3. WHEN 客户端发送 GET 请求到 `/api/recommend/analysis/{resume_id}/` THEN THE HRM_FastAPI_System SHALL 返回候选人的历史分析结果
+### 需求 9
 
-### Requirement 9: 开发测试工具 API
+**用户故事:** 作为 HR 主管，我希望能够获取候选人的综合分析和推荐，以便做出最终录用决策。
 
-**User Story:** As a 开发者, I want 使用测试工具 API, so that 可以生成测试数据和调试系统。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 GET /api/recommend/stats/ THEN FastAPI_Backend SHALL 返回已完成综合分析的统计数据
+2. WHEN 用户请求 POST /api/recommend/analysis/{resume_id}/ THEN FastAPI_Backend SHALL 对候选人进行综合分析并返回结果
+3. WHEN 用户请求 GET /api/recommend/analysis/{resume_id}/ THEN FastAPI_Backend SHALL 返回候选人的分析历史
 
-1. WHEN 客户端发送 POST 请求到 `/api/screening/dev/generate-resumes/` 并提供 position 和 count THEN THE HRM_FastAPI_System SHALL 生成随机简历并添加到简历库
-2. WHEN 客户端发送 GET/POST 请求到 `/api/screening/dev/force-error/` THEN THE HRM_FastAPI_System SHALL 控制是否强制筛选任务失败
-3. WHEN 客户端发送 POST 请求到 `/api/screening/dev/reset-state/` THEN THE HRM_FastAPI_System SHALL 清除所有测试相关的缓存和状态
+### 需求 10
 
-### Requirement 10: 数据库设计
+**用户故事:** 作为面试官，我希望有 AI 面试辅助系统，以便在面试过程中获得问题建议和答案评估。
 
-**User Story:** As a 系统架构师, I want 设计优化的数据库结构, so that 系统具有良好的性能和可维护性。
+#### 验收标准
 
-#### Acceptance Criteria
+1. WHEN 用户请求 GET /api/interviews/sessions/ THEN FastAPI_Backend SHALL 返回面试会话列表，支持 resume_id 参数筛选
+2. WHEN 用户请求 POST /api/interviews/sessions/ THEN FastAPI_Backend SHALL 创建新的面试会话
+3. WHEN 用户请求 GET /api/interviews/sessions/{session_id}/ THEN FastAPI_Backend SHALL 返回会话详情
+4. WHEN 用户请求 DELETE /api/interviews/sessions/{session_id}/ THEN FastAPI_Backend SHALL 删除会话
+5. WHEN 用户请求 POST /api/interviews/sessions/{session_id}/questions/ THEN FastAPI_Backend SHALL 生成候选面试问题
+6. WHEN 用户请求 POST /api/interviews/sessions/{session_id}/qa/ THEN FastAPI_Backend SHALL 记录问答并返回评估和候选问题
+7. WHEN 用户请求 POST /api/interviews/sessions/{session_id}/report/ THEN FastAPI_Backend SHALL 生成面试最终报告
 
-1. THE HRM_FastAPI_System SHALL 使用 SQLAlchemy 作为 ORM 框架
-2. THE HRM_FastAPI_System SHALL 使用 UUID 作为所有表的主键
-3. THE HRM_FastAPI_System SHALL 为所有表添加 created_at 和 updated_at 时间戳字段
-4. THE HRM_FastAPI_System SHALL 使用 JSON 字段存储复杂的嵌套数据结构
-5. THE HRM_FastAPI_System SHALL 为常用查询字段创建数据库索引
-6. THE HRM_FastAPI_System SHALL 支持 SQLite（开发）和 PostgreSQL（生产）数据库
+### 需求 11
 
-### Requirement 11: 项目结构和配置
+**用户故事:** 作为系统架构师，我希望新后端采用现代化的技术栈和最佳实践，以便提高系统的可维护性和性能。
 
-**User Story:** As a 开发者, I want 清晰的项目结构, so that 代码易于理解和维护。
+#### 验收标准
 
-#### Acceptance Criteria
+1. THE FastAPI_Backend SHALL 使用 FastAPI 框架作为 Web 框架
+2. THE FastAPI_Backend SHALL 使用 SQLAlchemy 作为 ORM 框架
+3. THE FastAPI_Backend SHALL 使用 Pydantic 进行数据验证和序列化
+4. THE FastAPI_Backend SHALL 使用 SQLite 作为默认数据库（支持切换到其他数据库）
+5. THE FastAPI_Backend SHALL 提供 OpenAPI/Swagger 文档，路径为 /api/docs/
+6. THE FastAPI_Backend SHALL 支持异步任务处理（用于 AI 分析等耗时操作）
+7. THE FastAPI_Backend SHALL 实现统一的错误处理和日志记录
 
-1. THE HRM_FastAPI_System SHALL 创建独立的项目目录 `HRM2-FastAPI-Backend`
-2. THE HRM_FastAPI_System SHALL 使用 Python 3.10+ 和 FastAPI 框架
-3. THE HRM_FastAPI_System SHALL 使用 Pydantic 进行数据验证
-4. THE HRM_FastAPI_System SHALL 使用环境变量管理配置（.env 文件）
-5. THE HRM_FastAPI_System SHALL 提供 requirements.txt 依赖文件
-6. THE HRM_FastAPI_System SHALL 保持与 Django 后端相同的端口配置（默认 8000）
+### 需求 12
 
-### Requirement 12: 异步任务处理
+**用户故事:** 作为系统架构师，我希望数据库设计合理优化，以便支持系统的高效运行。
 
-**User Story:** As a 系统用户, I want 长时间任务异步执行, so that 系统响应保持流畅。
+#### 验收标准
 
-#### Acceptance Criteria
+1. THE FastAPI_Backend SHALL 设计合理的数据库表结构，支持所有业务功能
+2. THE FastAPI_Backend SHALL 使用 UUID 作为主键类型，与前端期望一致
+3. THE FastAPI_Backend SHALL 实现软删除机制，保留数据历史
+4. THE FastAPI_Backend SHALL 建立合理的表关联关系，支持岗位-简历、简历-筛选数据等关联
+5. THE FastAPI_Backend SHALL 支持数据库迁移管理
 
-1. WHEN 提交简历筛选任务 THEN THE HRM_FastAPI_System SHALL 异步执行 AI 分析，立即返回任务 ID
-2. WHEN 提交视频分析任务 THEN THE HRM_FastAPI_System SHALL 异步执行分析，立即返回任务 ID
-3. WHEN 生成面试问题或报告 THEN THE HRM_FastAPI_System SHALL 支持同步执行（带超时配置）
-4. THE HRM_FastAPI_System SHALL 使用后台任务或任务队列处理异步操作
+### 需求 13
 
-### Requirement 13: 文件处理
+**用户故事:** 作为运维人员，我希望新后端易于部署和配置，以便快速上线和维护。
 
-**User Story:** As a 用户, I want 上传和下载文件, so that 可以管理简历和报告文件。
+#### 验收标准
 
-#### Acceptance Criteria
-
-1. WHEN 上传简历文件 THEN THE HRM_FastAPI_System SHALL 解析文件内容并存储
-2. WHEN 上传视频文件 THEN THE HRM_FastAPI_System SHALL 保存文件到 media 目录
-3. WHEN 下载报告 THEN THE HRM_FastAPI_System SHALL 返回正确的 Content-Disposition 头，包含 UTF-8 编码的文件名
-4. THE HRM_FastAPI_System SHALL 使用 media 目录存储上传的文件
-
-### Requirement 14: AI 服务集成
-
-**User Story:** As a 系统, I want 集成 AI 服务, so that 可以提供智能分析功能。
-
-#### Acceptance Criteria
-
-1. THE HRM_FastAPI_System SHALL 提供 AI 服务接口抽象层
-2. THE HRM_FastAPI_System SHALL 支持配置 AI 服务端点和 API 密钥
-3. WHEN AI 服务不可用 THEN THE HRM_FastAPI_System SHALL 返回适当的错误信息
-4. THE HRM_FastAPI_System SHALL 为 AI 调用设置合理的超时时间（60-120秒）
+1. THE FastAPI_Backend SHALL 支持通过环境变量配置数据库连接、AI 服务等参数
+2. THE FastAPI_Backend SHALL 提供 requirements.txt 或 pyproject.toml 管理依赖
+3. THE FastAPI_Backend SHALL 支持 CORS 配置，允许前端跨域访问
+4. THE FastAPI_Backend SHALL 提供静态文件和媒体文件服务
+5. THE FastAPI_Backend SHALL 在独立目录中创建，不影响现有 Django 项目

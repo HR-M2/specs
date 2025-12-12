@@ -1,0 +1,229 @@
+# 实现计划
+
+- [ ] 1. 项目初始化和基础架构
+  - [ ] 1.1 创建 FastAPI 项目目录结构
+    - 创建 HRM2-FastAPI-Backend 目录
+    - 创建 app/, tests/, media/, alembic/ 子目录
+    - 创建 requirements.txt, .env.example, README.md
+    - _需求: 11.1, 13.2_
+  - [ ] 1.2 配置 FastAPI 应用入口
+    - 创建 app/main.py，配置 FastAPI 实例
+    - 配置 CORS 中间件
+    - 配置静态文件和媒体文件服务
+    - 配置 Swagger UI 文档路径 /api/docs/
+    - _需求: 11.1, 11.5, 13.3, 13.4_
+  - [ ] 1.3 配置数据库连接
+    - 创建 app/database.py，配置 SQLAlchemy 异步引擎
+    - 创建 app/config.py，支持环境变量配置
+    - 配置 Alembic 数据库迁移
+    - _需求: 11.2, 11.4, 13.1_
+  - [ ] 1.4 创建统一响应格式
+    - 创建 app/schemas/common.py，定义 ApiResponse 模型
+    - 创建 app/utils/response.py，封装响应工具函数
+    - _需求: 1.4, 1.5, 1.6_
+  - [ ] 1.5 编写属性测试：统一响应格式
+    - **Property 1: 统一响应格式**
+    - **验证: 需求 1.4**
+
+- [ ] 2. 数据模型实现
+  - [ ] 2.1 创建 Position 模型
+    - 创建 app/models/position.py
+    - 定义岗位字段：position, department, required_skills 等
+    - _需求: 2.1, 12.1, 12.2_
+  - [ ] 2.2 创建 Resume 模型
+    - 创建 app/models/resume.py
+    - 定义统一简历字段：filename, file_hash, content, screening_score 等
+    - _需求: 3.1, 4.5, 12.1, 12.2_
+  - [ ] 2.3 创建 ScreeningTask 模型
+    - 创建 app/models/screening.py
+    - 定义任务状态枚举和字段
+    - _需求: 4.1, 12.1_
+  - [ ] 2.4 创建 VideoAnalysis 模型
+    - 创建 app/models/video.py
+    - 定义视频分析字段和状态
+    - _需求: 8.1, 12.1_
+  - [ ] 2.5 创建 InterviewSession 模型
+    - 创建 app/models/interview.py
+    - 定义会话字段和 JSON 问答记录
+    - _需求: 10.1, 12.1_
+  - [ ] 2.6 创建 ComprehensiveAnalysis 模型
+    - 创建 app/models/recommend.py
+    - 定义综合分析结果字段
+    - _需求: 9.1, 12.1_
+  - [ ] 2.7 创建 ResumePositionAssignment 关联模型
+    - 在 app/models/position.py 中添加关联表
+    - _需求: 2.6, 12.4_
+  - [ ] 2.8 生成数据库迁移并初始化
+    - 运行 alembic revision 生成迁移脚本
+    - 运行 alembic upgrade head 创建表
+    - _需求: 12.5_
+  - [ ] 2.9 编写属性测试：UUID 格式一致性
+    - **Property 10: UUID 格式一致性**
+    - **验证: 需求 12.2**
+
+- [ ] 3. 岗位管理 API (/api/positions/)
+  - [ ] 3.1 创建岗位 Pydantic 模式
+    - 创建 app/schemas/position.py
+    - 定义 PositionCreate, PositionUpdate, PositionResponse
+    - _需求: 1.2_
+  - [ ] 3.2 实现岗位列表和创建 API
+    - 创建 app/api/positions.py
+    - 实现 GET /api/positions/ 和 POST /api/positions/
+    - _需求: 2.1, 2.2_
+  - [ ] 3.3 实现岗位详情、更新、删除 API
+    - 实现 GET/PUT/DELETE /api/positions/{position_id}/
+    - _需求: 2.3, 2.4, 2.5_
+  - [ ] 3.4 实现简历分配和移除 API
+    - 实现 POST /api/positions/{position_id}/resumes/
+    - 实现 DELETE /api/positions/{position_id}/resumes/{resume_id}/
+    - _需求: 2.6, 2.7_
+  - [ ] 3.5 实现 AI 生成岗位要求 API
+    - 实现 POST /api/positions/ai/generate/
+    - 集成 AI 服务调用
+    - _需求: 2.8_
+  - [ ] 3.6 编写属性测试：岗位创建后可查询
+    - **Property 5: 岗位创建后可查询**
+    - **验证: 需求 2.2, 2.3**
+
+- [ ] 4. Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户
+
+- [ ] 5. 简历库 API (/api/library/)
+  - [ ] 5.1 创建简历 Pydantic 模式
+    - 创建 app/schemas/resume.py
+    - 定义 ResumeUpload, ResumeResponse, LibraryListResponse
+    - _需求: 1.2_
+  - [ ] 5.2 实现简历库列表 API
+    - 实现 GET /api/library/
+    - 支持分页和筛选参数 (keyword, is_screened, is_assigned)
+    - _需求: 3.1_
+  - [ ] 5.3 实现简历上传 API
+    - 实现 POST /api/library/
+    - 处理文件哈希计算和去重
+    - _需求: 3.2_
+  - [ ] 5.4 实现简历详情、更新、删除 API
+    - 实现 GET/PUT/DELETE /api/library/{id}/
+    - _需求: 3.3, 3.4, 3.5_
+  - [ ] 5.5 实现批量删除和哈希检查 API
+    - 实现 POST /api/library/batch-delete/
+    - 实现 POST /api/library/check-hash/
+    - _需求: 3.6, 3.7_
+  - [ ] 5.6 编写属性测试：分页数据一致性
+    - **Property 3: 分页数据一致性**
+    - **验证: 需求 3.1**
+  - [ ] 5.7 编写属性测试：文件哈希去重
+    - **Property 4: 文件哈希去重**
+    - **验证: 需求 3.7**
+  - [ ] 5.8 编写属性测试：简历上传后可检索
+    - **Property 6: 简历上传后可检索**
+    - **验证: 需求 3.2, 3.3**
+
+- [ ] 6. 简历筛选 API (/api/screening/)
+  - [ ] 6.1 创建筛选相关 Pydantic 模式
+    - 创建 app/schemas/screening.py
+    - 定义任务、报告、简历组相关模式
+    - _需求: 1.2_
+  - [ ] 6.2 实现筛选任务提交 API
+    - 实现 POST /api/screening/
+    - 创建异步任务处理
+    - _需求: 4.1_
+  - [ ] 6.3 实现任务列表和状态查询 API
+    - 实现 GET /api/screening/tasks/
+    - 实现 GET /api/screening/tasks/{task_id}/status/
+    - 实现 DELETE /api/screening/tasks/{task_id}/
+    - _需求: 4.2, 4.3, 4.4_
+  - [ ] 6.4 实现报告查询和下载 API
+    - 实现 GET /api/screening/reports/{report_id}/
+    - 实现 GET /api/screening/reports/{report_id}/download/
+    - _需求: 4.5, 4.6_
+  - [ ] 6.5 实现简历数据 API
+    - 实现 GET/POST /api/screening/data/
+    - _需求: 4.7_
+  - [ ] 6.6 实现简历组管理 API
+    - 实现 GET /api/screening/groups/
+    - 实现 POST /api/screening/groups/create/
+    - 实现 GET /api/screening/groups/{group_id}/
+    - 实现 POST /api/screening/groups/add-resume/
+    - 实现 POST /api/screening/groups/remove-resume/
+    - 实现 POST /api/screening/groups/set-status/
+    - _需求: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
+  - [ ] 6.7 实现视频关联 API
+    - 实现 POST /api/screening/videos/link/
+    - 实现 POST /api/screening/videos/unlink/
+    - _需求: 6.1, 6.2_
+  - [ ] 6.8 实现开发测试工具 API
+    - 实现 POST /api/screening/dev/generate-resumes/
+    - 实现 GET/POST /api/screening/dev/force-error/
+    - 实现 POST /api/screening/dev/reset-state/
+    - _需求: 7.1, 7.2, 7.3_
+  - [ ] 6.9 编写属性测试：任务状态一致性
+    - **Property 7: 任务状态一致性**
+    - **验证: 需求 4.3**
+  - [ ] 6.10 编写属性测试：简历组成员计数
+    - **Property 8: 简历组成员计数**
+    - **验证: 需求 5.1**
+
+- [ ] 7. Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户
+
+- [ ] 8. 视频分析 API (/api/videos/)
+  - [ ] 8.1 创建视频分析 Pydantic 模式
+    - 创建 app/schemas/video.py
+    - _需求: 1.2_
+  - [ ] 8.2 实现视频分析 API
+    - 实现 GET /api/videos/
+    - 实现 POST /api/videos/upload/
+    - 实现 POST /api/videos/{video_id}/
+    - 实现 GET /api/videos/{video_id}/status/
+    - _需求: 8.1, 8.2, 8.3, 8.4_
+
+- [ ] 9. 最终推荐 API (/api/recommend/)
+  - [ ] 9.1 创建推荐分析 Pydantic 模式
+    - 创建 app/schemas/recommend.py
+    - _需求: 1.2_
+  - [ ] 9.2 实现推荐统计和分析 API
+    - 实现 GET /api/recommend/stats/
+    - 实现 GET/POST /api/recommend/analysis/{resume_id}/
+    - _需求: 9.1, 9.2, 9.3_
+
+- [ ] 10. 面试辅助 API (/api/interviews/)
+  - [ ] 10.1 创建面试辅助 Pydantic 模式
+    - 创建 app/schemas/interview.py
+    - _需求: 1.2_
+  - [ ] 10.2 实现会话管理 API
+    - 实现 GET/POST /api/interviews/sessions/
+    - 实现 GET/DELETE /api/interviews/sessions/{session_id}/
+    - _需求: 10.1, 10.2, 10.3, 10.4_
+  - [ ] 10.3 实现问题生成和问答记录 API
+    - 实现 POST /api/interviews/sessions/{session_id}/questions/
+    - 实现 POST /api/interviews/sessions/{session_id}/qa/
+    - _需求: 10.5, 10.6_
+  - [ ] 10.4 实现报告生成 API
+    - 实现 POST /api/interviews/sessions/{session_id}/report/
+    - _需求: 10.7_
+  - [ ] 10.5 编写属性测试：会话问答记录递增
+    - **Property 9: 会话问答记录递增**
+    - **验证: 需求 10.6**
+
+- [ ] 11. AI 服务集成
+  - [ ] 11.1 创建 AI 服务封装
+    - 创建 app/services/ai_service.py
+    - 封装 LLM 调用接口
+    - _需求: 2.8, 4.1, 9.2, 10.5, 10.6, 10.7_
+  - [ ] 11.2 实现简历筛选 AI 逻辑
+    - 创建 app/services/screening_service.py
+    - 实现异步筛选任务处理
+    - _需求: 4.1, 11.6_
+  - [ ] 11.3 实现面试辅助 AI 逻辑
+    - 创建 app/services/interview_service.py
+    - 实现问题生成和答案评估
+    - _需求: 10.5, 10.6, 10.7_
+  - [ ] 11.4 实现综合分析 AI 逻辑
+    - 创建 app/services/recommend_service.py
+    - 实现候选人综合评估
+    - _需求: 9.2_
+
+- [ ] 12. 最终 Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户
+  - 验证所有 49 个 API 端点正常工作
+  - 验证与前端的兼容性

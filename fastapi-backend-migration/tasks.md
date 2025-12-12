@@ -61,27 +61,27 @@
     - **Property 10: UUID 格式一致性**
     - **验证: 需求 12.2**
 
-- [ ] 3. 岗位管理 API (/api/positions/)
-  - [ ] 3.1 创建岗位 Pydantic 模式
+- [x] 3. 岗位管理 API (/api/positions/)
+  - [x] 3.1 创建岗位 Pydantic 模式
     - 创建 app/schemas/position.py
     - 定义 PositionCreate, PositionUpdate, PositionResponse
     - _需求: 1.2_
-  - [ ] 3.2 实现岗位列表和创建 API
+  - [x] 3.2 实现岗位列表和创建 API
     - 创建 app/api/positions.py
     - 实现 GET /api/positions/ 和 POST /api/positions/
     - _需求: 2.1, 2.2_
-  - [ ] 3.3 实现岗位详情、更新、删除 API
+  - [x] 3.3 实现岗位详情、更新、删除 API
     - 实现 GET/PUT/DELETE /api/positions/{position_id}/
     - _需求: 2.3, 2.4, 2.5_
-  - [ ] 3.4 实现简历分配和移除 API
+  - [x] 3.4 实现简历分配和移除 API
     - 实现 POST /api/positions/{position_id}/resumes/
     - 实现 DELETE /api/positions/{position_id}/resumes/{resume_id}/
     - _需求: 2.6, 2.7_
-  - [ ] 3.5 实现 AI 生成岗位要求 API
+  - [x] 3.5 实现 AI 生成岗位要求 API
     - 实现 POST /api/positions/ai/generate/
-    - 集成 AI 服务调用
+    - 集成 AI 服务调用（模拟实现，待 AI 服务集成阶段完善）
     - _需求: 2.8_
-  - [ ] 3.6 编写属性测试：岗位创建后可查询
+  - [x] 3.6 编写属性测试：岗位创建后可查询
     - **Property 5: 岗位创建后可查询**
     - **验证: 需求 2.2, 2.3**
 

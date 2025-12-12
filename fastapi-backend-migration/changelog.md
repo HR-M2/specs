@@ -174,3 +174,104 @@
 - 测试: 23/23 通过
 - 数据库: 7 张表成功创建
 - 迁移: Alembic 迁移脚本正常工作
+
+### 任务 3: 岗位管理 API (/api/positions/) (2024-12-12)
+
+#### 3.1 创建岗位 Pydantic 模式
+- 创建 `app/schemas/position.py`
+- 定义请求模式:
+  - `PositionBase`: 岗位基础字段
+  - `PositionCreate`: 创建岗位请求
+  - `PositionUpdate`: 更新岗位请求（所有字段可选）
+  - `AssignResumesRequest`: 分配简历请求
+  - `AIGenerateRequest`: AI 生成岗位要求请求
+- 定义响应模式:
+  - `PositionResponse`: 岗位详情响应
+  - `PositionListData`: 岗位列表响应数据
+  - `ResumeInPosition`: 岗位内的简历信息
+  - `AssignResumesResponse`: 分配简历响应
+  - `RemoveResumeResponse`: 移除简历响应
+  - `AIGenerateResponse`: AI 生成结果响应
+
+#### 3.2 实现岗位列表和创建 API
+- 创建 `app/api/positions.py`
+- 实现 `GET /api/positions/`:
+  - 支持 `include_resumes` 参数控制是否返回分配的简历
+  - 使用 `selectinload` 优化关联查询
+  - 返回 `{positions: [], total: n}` 格式
+- 实现 `POST /api/positions/`:
+  - 验证岗位名称不能重复
+  - 处理 `salary_range` 数组转换为 `salary_min/salary_max`
+  - 成功返回 code 201
+
+#### 3.3 实现岗位详情、更新、删除 API
+- 实现 `GET /api/positions/{position_id}/`:
+  - 支持 `include_resumes` 参数（默认 true）
+  - 不存在返回 404
+- 实现 `PUT /api/positions/{position_id}/`:
+  - 使用 `model_dump(exclude_unset=True)` 仅更新提供的字段
+  - 正确处理 `salary_range` 数组更新
+- 实现 `DELETE /api/positions/{position_id}/`:
+  - 软删除（设置 `is_active=False`）
+  - 删除后无法再查询到该岗位
+
+#### 3.4 实现简历分配和移除 API
+- 实现 `POST /api/positions/{position_id}/resumes/`:
+  - 接受 `resume_data_ids` 数组批量分配
+  - 跳过已分配的简历，统计 `assigned_count` 和 `skipped_count`
+  - 更新简历的 `is_assigned` 状态
+  - 先 flush 新记录再查询总数确保计数准确
+- 实现 `DELETE /api/positions/{position_id}/resumes/{resume_id}/`:
+  - 删除分配记录
+  - 检查简历是否还有其他岗位分配，更新 `is_assigned` 状态
+  - 修复计数逻辑：先 flush 删除操作再查询真实计数
+
+#### 3.5 实现 AI 生成岗位要求 API
+- 实现 `POST /api/positions/ai/generate/`:
+  - 接受 `description` 和 `documents` 参数
+  - 当前为模拟实现，返回基于输入的示例数据
+  - 预留 AI 服务集成接口（待任务 11 完善）
+
+#### 3.6 编写属性测试
+- 创建 `tests/test_api/test_positions.py`
+- 测试类 `TestPositionListAndCreate` (4 个测试):
+  - 获取空岗位列表
+  - 成功创建岗位
+  - 最小数据创建岗位
+  - 创建重复岗位失败
+- 测试类 `TestPositionDetail` (4 个测试):
+  - 获取岗位详情
+  - 获取不存在的岗位
+  - 更新岗位
+  - 删除岗位
+- 测试类 `TestPositionResumeAssignment` (3 个测试):
+  - 分配简历到岗位
+  - 重复分配简历被跳过
+  - 从岗位移除简历
+- 测试类 `TestAIGeneratePosition` (2 个测试):
+  - AI 生成岗位要求
+  - 空描述调用失败
+- 测试类 `TestProperty5PositionQueryable` (2 个测试):
+  - **Property 5: 岗位创建后可查询** - 验证需求 2.2, 2.3
+  - 创建多个岗位，所有岗位都可查询
+
+#### 3.7 注册路由
+- 更新 `app/main.py`:
+  - 导入 `app.api.positions` 模块
+  - 注册路由 `prefix="/api/positions"`, `tags=["岗位管理"]`
+
+#### Bug 修复
+- 修复 `app/api/positions.py` 中的依赖导入:
+  - 将 `from app.api.deps import get_db` 改为 `from app.database import get_db`
+  - 确保与测试配置中的依赖覆盖一致
+- 修复简历分配计数逻辑:
+  - 问题: 分配时计算已有数量再加新数量导致重复计数
+  - 解决: 先 flush 新记录，再查询数据库获取真实总数
+- 修复简历移除计数逻辑:
+  - 问题: 使用内存中的旧值减 1 导致计数不准确
+  - 解决: 先 flush 删除操作，再查询数据库获取真实总数
+
+#### 验证结果
+- 测试: 38/38 通过 (新增 15 个岗位 API 测试)
+- API 端点: 8 个岗位管理端点全部实现
+- 与 Django 后端兼容: 响应格式和字段与原有 API 保持一致

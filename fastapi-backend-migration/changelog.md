@@ -915,30 +915,117 @@
 - 测试: 125/125 通过
 - AI 服务: 配置正确，模型 `qwen3-max`，API `https://apis.iflow.cn/v1`
 
-### 任务 12: Agent 模块独立与扩展 (计划)
+### 任务 12: Agent 模块迁移（基于 AutoGen）(2024-12-12)
 
-#### 任务规划更新
-- 更新 `tasks.md`:
-  - 新增任务 12: Agent 模块独立与扩展
-  - 原任务 12（最终 Checkpoint）变为任务 13
-- 任务 12 子任务:
-  - 12.1 创建 `app/agents/` 目录结构
-  - 12.2 复刻 Django 多 Agent 架构（简历筛选 6 Agent）
-  - 12.3 复刻 Django 单 LLM 服务（Prompt 与 Django 完全一致）
-  - 12.4 迁移代码到 agents 模块
-  - 12.5 更新 API 层导入
-  - 12.6 更新设计文档
+#### 12.1 创建 app/agents/ 基础结构
+- 创建 `app/agents/__init__.py`: 模块入口，导出所有 Agent 相关功能
+- 创建 `app/agents/llm_config.py`: LLM 配置管理
+  - `get_llm_config()`: 获取 AutoGen 格式的 LLM 配置
+  - `get_config_list()`: 获取 LLM 配置列表
+  - `get_embedding_config()`: 获取 Embedding 模型配置
+  - `validate_llm_config()`: 验证 LLM 配置是否有效
+  - `get_llm_status()`: 获取 LLM 配置状态
+- 创建 `app/agents/base.py`: BaseAgentManager 基类
+  - 封装 AutoGen GroupChat 和 GroupChatManager 创建逻辑
+  - 支持任务进度更新和聊天运行
+- 安装依赖: `pyautogen>=0.2`, `openai>=1.6.0`
 
-#### 设计决策
-- 选择方案 A: 独立 `app/agents/` 目录
-- 理由:
-  - 职责分离: agents = AI 逻辑，services = 业务编排
-  - 可替换性: 方便后续切换 autogen/langchain
-  - 与 Django 结构呼应
-- 要求:
-  - **Prompt 必须与 Django 完全一致**
-  - 多 Agent 架构完整复刻 6 个 Agent
-  - 单 LLM 调用使用 Django 原版 Prompt
+#### 12.2 迁移简历筛选 Agent
+- 创建 `app/agents/screening_agents.py`:
+  - `create_screening_agents()`: 创建 6 个筛选 Agent
+    - `User_Proxy`: 企业招聘负责人代理
+    - `Assistant`: 招聘系统协调员
+    - `HR_Expert`: HR 专家评估
+    - `Technical_Expert`: 技术专家评估
+    - `Project_Manager_Expert`: 项目经理评估
+    - `Critic`: 综合评审专家
+  - `generate_scoring_rules()`: 根据招聘条件生成评分规则
+  - `ScreeningAgentManager`: 管理 AutoGen GroupChat 多 Agent 协作流程
+
+#### 12.3 迁移面试辅助 Agent
+- 创建 `app/agents/interview_assist_agent.py`:
+  - `InterviewAssistAgent`: 面试助手 Agent（精简版）
+  - 保留功能:
+    - `generate_resume_based_questions()`: 根据简历生成问题
+    - `generate_skill_based_questions()`: 根据技能类别生成问题
+    - `generate_candidate_questions()`: 生成候选提问
+    - `generate_final_report()`: 生成最终报告
+  - **跳过死代码**: `evaluate_answer()`, `generate_followup_suggestions()` 等
+
+#### 12.4 迁移综合分析 Agent
+- 创建 `app/agents/evaluation_agents.py`:
+  - `CandidateComprehensiveAnalyzer`: 单人综合分析评估器
+  - Rubric 量表定义: `RUBRIC_SCALES` (1-5 分)
+  - 5 个评估维度: `EVALUATION_DIMENSIONS`
+    - 专业能力 (30%)
+    - 工作经验 (25%)
+    - 软技能 (20%)
+    - 文化匹配 (15%)
+    - 面试表现 (10%)
+  - 推荐等级: `RECOMMENDATION_LEVELS`
+  - **跳过旧版功能**: `EvaluationAgentManager`, `run_evaluation()`
+
+#### 12.5 迁移岗位生成 Agent
+- 创建 `app/agents/position_generator.py`（原名 `position_ai_service.py`）:
+  - `PositionGenerator`: AI 生成岗位要求核心实现
+  - `generate_position_requirements()`: 根据描述生成岗位要求 JSON
+  - `get_embeddings()`: 获取文本向量（预留语义搜索）
+  - `get_position_generator()`: 获取单例实例
+
+#### 12.6-12.7 整合与验证（初版）
+- 更新 `app/services/__init__.py`: 整合导出 agents 模块
+- 测试结果: 125 个测试全部通过
+
+#### 12.8 重构 services 层架构（二次调整）
+**架构调整原则**:
+- `agents` 模块职责: 只放 AI 核心实现（LLM 配置、AutoGen Agent、提示词模板等）
+- `services` 模块职责: `ai_service.py` 作为业务层统一入口，只做业务编排，具体 AI 逻辑委托给 agents
+
+**删除旧服务文件**:
+- `app/services/interview_service.py`
+- `app/services/recommend_service.py`
+- `app/services/screening_service.py`
+
+**重命名**:
+- `agents/position_ai_service.py` → `agents/position_generator.py`
+- 类名 `PositionAIService` → `PositionGenerator`
+
+**重写 `ai_service.py`** 为业务层统一入口:
+- `PositionAIService`: 岗位生成服务，委托给 `PositionGenerator`
+- `ResumeScreeningService`: 简历筛选服务，委托给 `ScreeningAgentManager`
+- `InterviewAssistService`: 面试辅助服务，委托给 `InterviewAssistAgent`
+- `ComprehensiveAnalysisService`: 综合分析服务，委托给 `CandidateComprehensiveAnalyzer`
+- 每个服务类包含 `is_configured()` 方法检查 LLM 配置状态
+
+**更新 API 层 import**:
+- `screening.py` → `from app.services.ai_service import get_screening_service`
+- `interviews.py` → `from app.services.ai_service import get_interview_assist_service`
+- `recommend.py` → `from app.services.ai_service import perform_comprehensive_analysis, get_comprehensive_analysis_service`
+- `positions.py` → `from app.services.ai_service import get_position_ai_service`
+
+**更新 `services/__init__.py`**: 简化为只导出业务层服务
+
+#### 最终目录结构
+```
+app/
+├── agents/                    # AI 核心实现
+│   ├── __init__.py
+│   ├── llm_config.py          # LLM 配置管理
+│   ├── base.py                # BaseAgentManager 基类
+│   ├── screening_agents.py    # 简历筛选 AutoGen Agent
+│   ├── interview_assist_agent.py  # 面试辅助 Agent
+│   ├── evaluation_agents.py   # 综合评估 Agent
+│   └── position_generator.py  # 岗位生成器
+│
+└── services/                  # 业务层
+    ├── __init__.py
+    └── ai_service.py          # 统一入口，调用 agents 模块
+```
+
+#### 验证结果
+- 测试: 125/125 通过
+- 模块导入: 成功
+- API 兼容性: 与原有 API 保持完全兼容
 
 #### 已完成功能
 - ✅ 项目初始化和基础架构
@@ -950,4 +1037,6 @@
 - ✅ 最终推荐 API (3 个端点)
 - ✅ 面试辅助 API (7 个端点)
 - ✅ AI 服务集成 (4 个服务模块)
+- ✅ Agent 模块迁移 (基于 AutoGen)
+- ✅ Services 层重构 (业务编排与 AI 逻辑分离)
 - ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 9, 10

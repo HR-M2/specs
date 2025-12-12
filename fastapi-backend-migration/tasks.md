@@ -223,13 +223,13 @@
     - 实现候选人综合评估
     - _需求: 9.2_
 
-- [ ] 12. Agent 模块迁移（基于 AutoGen）
-  - [ ] 12.1 创建 app/agents/ 基础结构
+- [x] 12. Agent 模块迁移（基于 AutoGen）
+  - [x] 12.1 创建 app/agents/ 基础结构
     - 从 Django `services/agents/` 复制 `llm_config.py` 和 `base.py`
     - 安装依赖 `pyautogen>=0.2`
-  - [ ] 12.2 迁移简历筛选 Agent
+  - [x] 12.2 迁移简历筛选 Agent
     - 从 Django `services/agents/screening_agents.py` 复制，使用 AutoGen GroupChat 多 Agent 协作
-  - [ ] 12.3 迁移面试辅助 Agent
+  - [x] 12.3 迁移面试辅助 Agent
     - 从 Django `services/agents/interview_assist_agent.py` 复制
     - **跳过以下废弃/未使用的功能（死代码）**：
       - `evaluate_answer()` - 每句话实时评分，默认 skip_evaluation=True
@@ -239,15 +239,39 @@
       - `_get_fallback_followup_suggestions()` - followup 的备用方法
       - `ANSWER_EVALUATION_PROMPT` - 评估提示词模板
       - `FOLLOWUP_SUGGESTION_PROMPT` - 追问提示词模板
-  - [ ] 12.4 迁移综合分析 Agent
+  - [x] 12.4 迁移综合分析 Agent
     - 从 Django `services/agents/evaluation_agents.py` 复制
     - **跳过以下已删除的功能**：
       - `EvaluationAgentManager` - 旧版多 Agent 协作评估，已被 `CandidateComprehensiveAnalyzer` 替代
       - `run_evaluation()` - 批量评估功能，不再支持
-  - [ ] 12.5 迁移岗位生成 Agent
+  - [x] 12.5 迁移岗位生成 Agent
     - 从 Django `services/agents/position_ai_service.py` 复制
-  - [ ] 12.6 整合：更新 services 层调用 agents 模块，删除旧 `ai_service.py`
-  - [ ] 12.7 验证所有测试通过
+  - [x] 12.6 整合：更新 services 层调用 agents 模块（初版）
+    - 保留 `ai_service.py` 作为基础服务类
+    - 在 `services/__init__.py` 中整合导出 agents 模块
+  - [x] 12.7 验证所有测试通过
+    - 125 个测试全部通过
+  - [x] 12.8 重构 services 层架构（二次调整）
+    - **架构调整原则**：
+      - `agents` 模块职责：只放 AI 核心实现（LLM 配置、AutoGen Agent、提示词模板等）
+      - `services` 模块职责：`ai_service.py` 作为业务层统一入口，只做业务编排，具体 AI 逻辑委托给 agents
+    - **删除旧服务文件**：
+      - `app/services/interview_service.py`
+      - `app/services/recommend_service.py`
+      - `app/services/screening_service.py`
+    - **重命名**：
+      - `agents/position_ai_service.py` → `agents/position_generator.py`
+      - 类名 `PositionAIService` → `PositionGenerator`
+    - **重写 `ai_service.py`**：
+      - 作为业务层统一入口
+      - 包含 `PositionAIService`、`ResumeScreeningService`、`InterviewAssistService`、`ComprehensiveAnalysisService`
+      - 每个服务类内部委托给对应的 agents 模块
+    - **更新 API 层 import**：
+      - `screening.py` → `from app.services.ai_service import get_screening_service`
+      - `interviews.py` → `from app.services.ai_service import get_interview_assist_service`
+      - `recommend.py` → `from app.services.ai_service import perform_comprehensive_analysis, get_comprehensive_analysis_service`
+    - **更新 `services/__init__.py`**：简化为只导出业务层服务
+    - 125 个测试全部通过
 
 - [ ] 13. 最终 Checkpoint - 确保所有测试通过
   - 确保所有测试通过，如有问题请询问用户

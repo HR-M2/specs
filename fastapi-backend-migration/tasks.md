@@ -223,40 +223,31 @@
     - 实现候选人综合评估
     - _需求: 9.2_
 
-- [ ] 12. Agent 模块独立与扩展
-  - [ ] 12.1 创建 app/agents/ 目录结构
-    - 创建 app/agents/__init__.py
-    - 创建 app/agents/base.py（Agent 抽象基类，参考 Django services/agents/base.py）
-    - 创建 app/agents/llm_config.py（LLM 配置管理，参考 Django services/agents/llm_config.py）
-    - 创建 app/agents/prompts/ 目录（Prompt 模板，**必须与 Django 完全一致**）
-    - _目的: 为后续 autogen/langchain 多 Agent 升级预留扩展点_
-  - [ ] 12.2 复刻 Django 多 Agent 架构（简历筛选）
-    - 参考 Django services/agents/screening_agents.py
-    - **完整复刻 6 Agent 架构**: User_Proxy → Assistant → HR_Expert → Technical_Expert → Project_Manager_Expert → Critic
-    - **Prompt 必须一模一样**: 各 Agent 的 system_message 完全复制
-    - 当前使用直接 LLM 调用模拟多 Agent 流程，预留 autogen GroupChat 接口
-    - _目的: 保持与 Django 行为一致，方便后续切换 autogen_
-  - [ ] 12.3 复刻 Django 单 LLM 服务（面试辅助、综合分析、岗位生成）
-    - 参考 Django services/agents/interview_assist_agent.py（**Prompt 完全一致**）
-    - 参考 Django services/agents/evaluation_agents.py（**Prompt 完全一致**）
-    - 参考 Django services/agents/position_ai_service.py（**Prompt 完全一致**）
-    - 单 LLM 调用保持现有实现，仅替换 Prompt 为 Django 原版
-    - _目的: 确保 AI 输出结果与 Django 后端一致_
-  - [ ] 12.4 迁移代码到 agents 模块
-    - 迁移 services/ai_service.py → agents/base.py
-    - 迁移 services/screening_service.py → agents/screening_agent.py
-    - 迁移 services/interview_service.py → agents/interview_agent.py
-    - 迁移 services/recommend_service.py → agents/recommend_agent.py
-    - 清理 services/ 中的 AI 相关文件
-    - _目的: 职责分离，AI 逻辑独立于业务服务_
-  - [ ] 12.5 更新 API 层导入
-    - 更新 app/api/ 中的导入路径
-    - 确保所有测试通过
-    - _目的: 保持 API 功能不变_
-  - [ ] 12.6 更新设计文档
-    - 更新 design.md 架构图，添加 agents/ 目录
-    - 添加 Agent 扩展说明和 Prompt 来源说明
-    - _目的: 文档与代码同步_
+- [ ] 12. Agent 模块迁移（基于 AutoGen）
+  - [ ] 12.1 创建 app/agents/ 基础结构
+    - 从 Django `services/agents/` 复制 `llm_config.py` 和 `base.py`
+    - 安装依赖 `pyautogen>=0.2`
+  - [ ] 12.2 迁移简历筛选 Agent
+    - 从 Django `services/agents/screening_agents.py` 复制，使用 AutoGen GroupChat 多 Agent 协作
+  - [ ] 12.3 迁移面试辅助 Agent
+    - 从 Django `services/agents/interview_assist_agent.py` 复制
+    - **跳过以下废弃/未使用的功能（死代码）**：
+      - `evaluate_answer()` - 每句话实时评分，默认 skip_evaluation=True
+      - `generate_followup_suggestions()` - 追问建议生成，代码存在但从未被调用
+      - `_get_minimal_answer_evaluation()` - evaluate_answer 的辅助方法
+      - `_get_fallback_evaluation()` - evaluate_answer 的备用方法
+      - `_get_fallback_followup_suggestions()` - followup 的备用方法
+      - `ANSWER_EVALUATION_PROMPT` - 评估提示词模板
+      - `FOLLOWUP_SUGGESTION_PROMPT` - 追问提示词模板
+  - [ ] 12.4 迁移综合分析 Agent
+    - 从 Django `services/agents/evaluation_agents.py` 复制
+    - **跳过以下已删除的功能**：
+      - `EvaluationAgentManager` - 旧版多 Agent 协作评估，已被 `CandidateComprehensiveAnalyzer` 替代
+      - `run_evaluation()` - 批量评估功能，不再支持
+  - [ ] 12.5 迁移岗位生成 Agent
+    - 从 Django `services/agents/position_ai_service.py` 复制
+  - [ ] 12.6 整合：更新 services 层调用 agents 模块，删除旧 `ai_service.py`
+  - [ ] 12.7 验证所有测试通过
 
 - [ ] 13. 最终 Checkpoint - 确保所有测试通过
   - 确保所有测试通过，如有问题请询问用户

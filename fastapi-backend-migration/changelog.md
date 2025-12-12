@@ -1145,17 +1145,53 @@ app/
   - LLM 未配置时：验证返回 500 错误及错误消息包含 "LLM"
   - LLM 已配置时：验证成功响应格式
 
-#### 15.4 待完善的验证范围
-详见 `tasks.md` 任务 15 规划，需要对 49 个 API 端点进行系统性的数据格式验证。
+#### 15.4 完成全部响应数据格式验证测试 (2024-12-12)
+
+创建 6 个独立的响应数据格式验证测试文件，共计 **37 个测试用例**，全部通过。
+
+| 模块 | 测试文件 | 测试数 | 覆盖端点 |
+|------|----------|--------|----------|
+| 简历库 | `test_library_response_validation.py` | 7 | GET/POST/PUT/DELETE /api/library/, batch-delete, check-hash |
+| 岗位管理 | `test_positions_response_validation.py` | 7 | CRUD, assign/remove resumes, AI generate |
+| 简历筛选 | `test_screening_response_validation.py` | 11 | tasks, reports, data, groups, video link, dev tools |
+| 视频分析 | `test_videos_response_validation.py` | 3 | list, status, update |
+| 推荐模块 | `test_recommend_response_validation.py` | 3 | stats, analysis GET/POST |
+| 面试辅助 | `test_interviews_response_validation.py` | 6 | sessions, questions, qa, report |
+
+**已验证的高风险字段类型**:
+
+| 字段 | Schema 类型 | 验证状态 |
+|------|-------------|----------|
+| `screening_score` | `Dict[str, Any]` | ✅ 多模块使用，一致性验证 |
+| `video_analysis` | `Dict[str, Any]` | ✅ 简历组、数据列表 |
+| `analysis_result` | `VideoAnalysisResult` | ✅ 大五人格嵌套对象 |
+| `final_report` | `Dict/FinalReport` | ✅ 面试报告嵌套结构 |
+| `evaluation` | `EvaluationResult` | ✅ 问答评估结果 |
+| `dimension_scores` | `Dict[str, Any]` | ✅ 综合分析维度评分 |
+| `qa_records` | `List[QARecord]` | ✅ 面试问答记录列表 |
+| `recommendation` | `Recommendation` | ✅ 推荐结果嵌套对象 |
+
+**测试实现要点**:
+1. 每个测试创建完整的测试数据（非 None 值），触发 Schema 验证
+2. 验证嵌套对象的关键字段类型（如 `isinstance(item["screening_score"], dict)`）
+3. 适配测试环境特性：
+   - LLM 未配置时优雅降级（如 generate-resumes 返回 500 + 明确错误消息）
+   - 响应格式可能的变体处理（如 `{"sessions": [...]}` vs `[...]`）
+
+**运行结果**:
+```
+============================= 37 passed in 3.38s =============================
+```
 
 ---
 
 ## 项目完成总结
 
 ### 最终成果
-- **测试覆盖**: 125 个测试用例全部通过
+- **测试覆盖**: 162 个测试用例全部通过 (含 37 个响应数据格式验证测试)
 - **API 端点**: 49 个业务端点 + 2 个健康检查端点
 - **属性测试**: 10 个属性全部验证通过
+- **Schema 验证**: 8 个高风险嵌套类型全部验证
 - **前端兼容性**: 100% 兼容，无需修改前端代码
 
 ### 技术栈

@@ -765,6 +765,83 @@
 - 主应用加载验证: 成功
 - API 端点: 3 个最终推荐端点全部实现
 
+### 任务 10: 面试辅助 API (/api/interviews/)
+
+#### 10.1 创建面试辅助 Pydantic 模式
+- 创建 `app/schemas/interview.py`:
+  - 输入模式:
+    - `SessionCreateRequest`: 创建会话请求
+    - `GenerateQuestionsRequest`: 生成问题请求
+    - `QuestionData`, `AnswerData`: 问答数据
+    - `RecordQARequest`: 记录问答请求
+    - `GenerateReportRequest`: 生成报告请求
+  - 响应模式:
+    - `SessionListItem`, `SessionCreateResponse`, `SessionDetailResponse`: 会话相关
+    - `GenerateQuestionsResponse`, `GeneratedQuestion`, `InterestPoint`: 问题生成
+    - `RecordQAResponse`, `CandidateQuestion`, `EvaluationResult`: 问答记录
+    - `GenerateReportResponse`, `FinalReport`, `OverallAssessment`: 报告生成
+
+#### 10.2 实现会话管理 API
+- 创建 `app/api/interviews.py`:
+  - `GET /api/interviews/sessions/`: 获取会话列表（需 resume_id 参数）
+  - `POST /api/interviews/sessions/`: 创建面试会话
+  - `GET /api/interviews/sessions/{session_id}/`: 获取会话详情
+  - `DELETE /api/interviews/sessions/{session_id}/`: 删除会话
+  - 验证: 需求 10.1, 10.2, 10.3, 10.4
+
+#### 10.3 实现问题生成和问答记录 API
+- `POST /api/interviews/sessions/{session_id}/questions/`:
+  - 生成候选面试问题
+  - 支持 categories, candidate_level, count_per_category 参数
+  - 返回 question_pool, resume_highlights, interest_points
+- `POST /api/interviews/sessions/{session_id}/qa/`:
+  - 记录问答并获取候选提问
+  - 支持 skip_evaluation 跳过评估
+  - 返回 round_number, evaluation, candidate_questions, hr_action_hints
+  - 使用 `flag_modified` 确保 SQLAlchemy 检测 JSON 字段变更
+  - 验证: 需求 10.5, 10.6
+
+#### 10.4 实现报告生成 API
+- `POST /api/interviews/sessions/{session_id}/report/`:
+  - 生成面试最终报告
+  - 支持 include_conversation_log, hr_notes 参数
+  - 生成 Markdown 报告文件并保存到 `media/interview_reports/`
+  - 返回 report (含 overall_assessment, strengths, weaknesses, development_suggestions)
+  - 验证: 需求 10.7
+
+#### 10.5 编写属性测试
+- 创建 `tests/test_api/test_interviews.py`:
+  - **Property 9: 会话问答记录递增** - 每次记录问答后 current_round 递增 1
+  - 测试用例: 20 个
+    - `TestSessionListAPI`: 会话列表测试 (3)
+    - `TestSessionCreateAPI`: 创建会话测试 (3)
+    - `TestSessionDetailAPI`: 会话详情测试 (2)
+    - `TestSessionDeleteAPI`: 删除会话测试 (1)
+    - `TestGenerateQuestionsAPI`: 生成问题测试 (2)
+    - `TestRecordQAAPI`: 记录问答测试 (3)
+    - `TestGenerateReportAPI`: 生成报告测试 (2)
+    - `TestProperty9QARecordIncrement`: 属性测试 (3)
+    - `TestAdditionalProperty9`: 额外属性测试 (1)
+
+#### 10.6 注册路由
+- 更新 `app/main.py`:
+  - 导入 `app.api.interviews` 模块
+  - 注册路由 `prefix="/api/interviews"`, `tags=["面试辅助"]`
+
+#### 模拟实现函数
+- `generate_resume_based_questions_mock()`: 基于简历生成问题
+- `generate_skill_based_questions_mock()`: 基于技能类别生成问题
+- `evaluate_answer_mock()`: 评估回答
+- `generate_candidate_questions_mock()`: 生成候选问题
+- `generate_hr_hints()`: 生成 HR 行动提示
+- `generate_final_report_mock()`: 生成最终报告
+- `format_report_markdown()`: 格式化报告为 Markdown
+- 注: 真实 AI 实现将在任务 11（AI 服务集成）阶段替换
+
+#### 验证结果
+- 测试: 125/125 通过（现有测试 + 20 个新测试）
+- API 端点: 7 个面试辅助端点全部实现
+
 #### 已完成功能
 - ✅ 项目初始化和基础架构
 - ✅ 数据模型实现 (7 个模型)
@@ -773,4 +850,5 @@
 - ✅ 简历筛选 API (18 个端点)
 - ✅ 视频分析 API (4 个端点)
 - ✅ 最终推荐 API (3 个端点)
-- ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 10
+- ✅ 面试辅助 API (7 个端点)
+- ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 9, 10

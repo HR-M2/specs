@@ -186,22 +186,22 @@
     - 实现 GET/POST /api/recommend/analysis/{resume_id}/
     - _需求: 9.1, 9.2, 9.3_
 
-- [ ] 10. 面试辅助 API (/api/interviews/)
-  - [ ] 10.1 创建面试辅助 Pydantic 模式
+- [x] 10. 面试辅助 API (/api/interviews/)
+  - [x] 10.1 创建面试辅助 Pydantic 模式
     - 创建 app/schemas/interview.py
     - _需求: 1.2_
-  - [ ] 10.2 实现会话管理 API
+  - [x] 10.2 实现会话管理 API
     - 实现 GET/POST /api/interviews/sessions/
     - 实现 GET/DELETE /api/interviews/sessions/{session_id}/
     - _需求: 10.1, 10.2, 10.3, 10.4_
-  - [ ] 10.3 实现问题生成和问答记录 API
+  - [x] 10.3 实现问题生成和问答记录 API
     - 实现 POST /api/interviews/sessions/{session_id}/questions/
     - 实现 POST /api/interviews/sessions/{session_id}/qa/
     - _需求: 10.5, 10.6_
-  - [ ] 10.4 实现报告生成 API
+  - [x] 10.4 实现报告生成 API
     - 实现 POST /api/interviews/sessions/{session_id}/report/
     - _需求: 10.7_
-  - [ ] 10.5 编写属性测试：会话问答记录递增
+  - [x] 10.5 编写属性测试：会话问答记录递增
     - **Property 9: 会话问答记录递增**
     - **验证: 需求 10.6**
 

@@ -177,11 +177,11 @@
     - 实现 GET /api/videos/{video_id}/status/
     - _需求: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 9. 最终推荐 API (/api/recommend/)
-  - [ ] 9.1 创建推荐分析 Pydantic 模式
+- [x] 9. 最终推荐 API (/api/recommend/)
+  - [x] 9.1 创建推荐分析 Pydantic 模式
     - 创建 app/schemas/recommend.py
     - _需求: 1.2_
-  - [ ] 9.2 实现推荐统计和分析 API
+  - [x] 9.2 实现推荐统计和分析 API
     - 实现 GET /api/recommend/stats/
     - 实现 GET/POST /api/recommend/analysis/{resume_id}/
     - _需求: 9.1, 9.2, 9.3_

@@ -708,3 +708,69 @@
 - ✅ 简历筛选 API (18 个端点)
 - ✅ 视频分析 API (4 个端点)
 - ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 10
+
+### 任务 9: 最终推荐 API (/api/recommend/) (2024-12-12)
+
+#### 9.1 创建推荐分析 Pydantic 模式
+- 创建 `app/schemas/recommend.py` (~70行)
+- 定义响应模式:
+  - `RecommendStatsData`: 推荐统计数据（已分析简历数量）
+  - `Recommendation`: 推荐结果（level, label, action, score）
+  - `ComprehensiveAnalysisData`: 综合分析结果数据
+  - `InputDataSnapshot`: 输入数据快照（用于追溯）
+
+#### 9.2 实现推荐统计和分析 API
+- 创建 `app/api/recommend.py` (~300行)
+- 实现 `GET /api/recommend/stats/`:
+  - 统计已完成综合分析的唯一简历数量
+  - 使用 `func.distinct()` 确保每个简历只计数一次
+- 实现 `GET /api/recommend/analysis/{resume_id}/`:
+  - 获取候选人的最新综合分析结果
+  - 按创建时间倒序取第一条
+  - 无记录时返回 `data: null`
+  - 返回完整分析结果（推荐等级、各维度评分、综合报告）
+- 实现 `POST /api/recommend/analysis/{resume_id}/`:
+  - 对单个候选人进行综合分析
+  - 获取简历内容、初筛报告、面试记录等数据
+  - 检查必要数据（初筛分数或面试报告至少有一项）
+  - 调用 `perform_comprehensive_analysis()` 执行分析
+  - 保存分析结果到 `ComprehensiveAnalysis` 模型
+  - 记录输入数据快照便于追溯
+
+#### 9.3 实现综合分析逻辑（模拟实现）
+- 实现 `perform_comprehensive_analysis()` 函数:
+  - 计算各维度评分:
+    - `skill_match`: 技能匹配度（基于初筛分数）
+    - `experience`: 工作经验（基于初筛分数）
+    - `interview_performance`: 面试表现（基于面试记录）
+    - `potential`: 发展潜力
+  - 根据加权平均计算综合得分
+  - 确定推荐等级:
+    - ≥85分: high/强烈推荐
+    - ≥70分: medium/推荐
+    - ≥55分: low/待定
+    - <55分: reject/不推荐
+  - 生成 Markdown 格式综合报告
+  - 注: 真实 AI 分析器将在任务 11（AI 服务集成）阶段替换
+
+#### 9.4 注册路由
+- 更新 `app/main.py`:
+  - 导入 `app.api.recommend` 模块
+  - 注册路由 `prefix="/api/recommend"`, `tags=["最终推荐"]`
+  - 更新 TODO 注释（仅剩面试辅助待实现）
+
+#### 验证结果
+- 测试: 105/105 通过（现有测试全部通过）
+- 模块导入验证: 成功
+- 主应用加载验证: 成功
+- API 端点: 3 个最终推荐端点全部实现
+
+#### 已完成功能
+- ✅ 项目初始化和基础架构
+- ✅ 数据模型实现 (7 个模型)
+- ✅ 岗位管理 API (8 个端点)
+- ✅ 简历库 API (7 个端点)
+- ✅ 简历筛选 API (18 个端点)
+- ✅ 视频分析 API (4 个端点)
+- ✅ 最终推荐 API (3 个端点)
+- ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 10

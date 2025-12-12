@@ -1,27 +1,27 @@
 # 实现计划
 
-- [ ] 1. 项目初始化和基础架构
-  - [ ] 1.1 创建 FastAPI 项目目录结构
+- [x] 1. 项目初始化和基础架构
+  - [x] 1.1 创建 FastAPI 项目目录结构
     - 创建 HRM2-FastAPI-Backend 目录
     - 创建 app/, tests/, media/, alembic/ 子目录
     - 创建 requirements.txt, .env.example, README.md
     - _需求: 11.1, 13.2_
-  - [ ] 1.2 配置 FastAPI 应用入口
+  - [x] 1.2 配置 FastAPI 应用入口
     - 创建 app/main.py，配置 FastAPI 实例
     - 配置 CORS 中间件
     - 配置静态文件和媒体文件服务
     - 配置 Swagger UI 文档路径 /api/docs/
     - _需求: 11.1, 11.5, 13.3, 13.4_
-  - [ ] 1.3 配置数据库连接
+  - [x] 1.3 配置数据库连接
     - 创建 app/database.py，配置 SQLAlchemy 异步引擎
     - 创建 app/config.py，支持环境变量配置
     - 配置 Alembic 数据库迁移
     - _需求: 11.2, 11.4, 13.1_
-  - [ ] 1.4 创建统一响应格式
+  - [x] 1.4 创建统一响应格式
     - 创建 app/schemas/common.py，定义 ApiResponse 模型
     - 创建 app/utils/response.py，封装响应工具函数
     - _需求: 1.4, 1.5, 1.6_
-  - [ ] 1.5 编写属性测试：统一响应格式
+  - [x] 1.5 编写属性测试：统一响应格式
     - **Property 1: 统一响应格式**
     - **验证: 需求 1.4**
 

@@ -205,25 +205,60 @@
     - **Property 9: 会话问答记录递增**
     - **验证: 需求 10.6**
 
-- [ ] 11. AI 服务集成
-  - [ ] 11.1 创建 AI 服务封装
+- [x] 11. AI 服务集成
+  - [x] 11.1 创建 AI 服务封装
     - 创建 app/services/ai_service.py
     - 封装 LLM 调用接口
     - _需求: 2.8, 4.1, 9.2, 10.5, 10.6, 10.7_
-  - [ ] 11.2 实现简历筛选 AI 逻辑
+  - [x] 11.2 实现简历筛选 AI 逻辑
     - 创建 app/services/screening_service.py
     - 实现异步筛选任务处理
     - _需求: 4.1, 11.6_
-  - [ ] 11.3 实现面试辅助 AI 逻辑
+  - [x] 11.3 实现面试辅助 AI 逻辑
     - 创建 app/services/interview_service.py
     - 实现问题生成和答案评估
     - _需求: 10.5, 10.6, 10.7_
-  - [ ] 11.4 实现综合分析 AI 逻辑
+  - [x] 11.4 实现综合分析 AI 逻辑
     - 创建 app/services/recommend_service.py
     - 实现候选人综合评估
     - _需求: 9.2_
 
-- [ ] 12. 最终 Checkpoint - 确保所有测试通过
+- [ ] 12. Agent 模块独立与扩展
+  - [ ] 12.1 创建 app/agents/ 目录结构
+    - 创建 app/agents/__init__.py
+    - 创建 app/agents/base.py（Agent 抽象基类，参考 Django services/agents/base.py）
+    - 创建 app/agents/llm_config.py（LLM 配置管理，参考 Django services/agents/llm_config.py）
+    - 创建 app/agents/prompts/ 目录（Prompt 模板，**必须与 Django 完全一致**）
+    - _目的: 为后续 autogen/langchain 多 Agent 升级预留扩展点_
+  - [ ] 12.2 复刻 Django 多 Agent 架构（简历筛选）
+    - 参考 Django services/agents/screening_agents.py
+    - **完整复刻 6 Agent 架构**: User_Proxy → Assistant → HR_Expert → Technical_Expert → Project_Manager_Expert → Critic
+    - **Prompt 必须一模一样**: 各 Agent 的 system_message 完全复制
+    - 当前使用直接 LLM 调用模拟多 Agent 流程，预留 autogen GroupChat 接口
+    - _目的: 保持与 Django 行为一致，方便后续切换 autogen_
+  - [ ] 12.3 复刻 Django 单 LLM 服务（面试辅助、综合分析、岗位生成）
+    - 参考 Django services/agents/interview_assist_agent.py（**Prompt 完全一致**）
+    - 参考 Django services/agents/evaluation_agents.py（**Prompt 完全一致**）
+    - 参考 Django services/agents/position_ai_service.py（**Prompt 完全一致**）
+    - 单 LLM 调用保持现有实现，仅替换 Prompt 为 Django 原版
+    - _目的: 确保 AI 输出结果与 Django 后端一致_
+  - [ ] 12.4 迁移代码到 agents 模块
+    - 迁移 services/ai_service.py → agents/base.py
+    - 迁移 services/screening_service.py → agents/screening_agent.py
+    - 迁移 services/interview_service.py → agents/interview_agent.py
+    - 迁移 services/recommend_service.py → agents/recommend_agent.py
+    - 清理 services/ 中的 AI 相关文件
+    - _目的: 职责分离，AI 逻辑独立于业务服务_
+  - [ ] 12.5 更新 API 层导入
+    - 更新 app/api/ 中的导入路径
+    - 确保所有测试通过
+    - _目的: 保持 API 功能不变_
+  - [ ] 12.6 更新设计文档
+    - 更新 design.md 架构图，添加 agents/ 目录
+    - 添加 Agent 扩展说明和 Prompt 来源说明
+    - _目的: 文档与代码同步_
+
+- [ ] 13. 最终 Checkpoint - 确保所有测试通过
   - 确保所有测试通过，如有问题请询问用户
   - 验证所有 49 个 API 端点正常工作
   - 验证与前端的兼容性

@@ -842,6 +842,104 @@
 - 测试: 125/125 通过（现有测试 + 20 个新测试）
 - API 端点: 7 个面试辅助端点全部实现
 
+### 任务 11: AI 服务集成 (2024-12-12)
+
+#### 11.1 创建 AI 服务封装
+- 创建 `app/services/ai_service.py`:
+  - `AIService` 基础类: 封装 OpenAI 兼容的异步 LLM 调用
+  - `chat()`: 发送聊天请求，返回文本响应
+  - `chat_json()`: 发送请求并解析 JSON 响应（自动清理 markdown 代码块）
+  - `is_configured()`: 检查 API key 是否配置
+  - `get_status()`: 获取服务配置状态
+  - `PositionAIService`: 岗位 AI 服务，生成结构化岗位要求 JSON
+  - 单例管理: `get_ai_service()`, `get_position_ai_service()`
+
+#### 11.2 实现简历筛选 AI 逻辑
+- 创建 `app/services/screening_service.py`:
+  - `ResumeScreeningService`: 多角度简历筛选服务
+  - 三角色评估: HR 评估、技术评估、管理评估
+  - 综合评估: 加权计算最终得分
+  - 生成 Markdown 和 JSON 格式报告
+  - Prompt 模板: `HR_EVALUATION_PROMPT`, `TECHNICAL_EVALUATION_PROMPT`, `MANAGER_EVALUATION_PROMPT`, `COMPREHENSIVE_EVALUATION_PROMPT`
+
+#### 11.3 实现面试辅助 AI 逻辑
+- 创建 `app/services/interview_service.py`:
+  - `InterviewAssistService`: 面试辅助 AI 服务
+  - `generate_resume_based_questions()`: 根据简历生成问题
+  - `generate_skill_based_questions()`: 根据技能类别生成问题
+  - `evaluate_answer()`: 6 维度评估回答（技术深度、实践经验、回答具体性、逻辑清晰度、诚实度、沟通能力）
+  - `generate_candidate_questions()`: 分析回答类型并生成候选问题
+  - `generate_final_report()`: 生成面试最终报告
+  - 完整的 fallback 机制: LLM 调用失败时返回备用结果
+
+#### 11.4 实现综合分析 AI 逻辑
+- 创建 `app/services/recommend_service.py`:
+  - `ComprehensiveAnalysisService`: 基于 Rubric 量表的多维度评估
+  - 5 个评估维度: 专业能力(30%)、工作经验(25%)、软技能(20%)、文化匹配(15%)、面试表现(10%)
+  - 推荐等级: 强烈推荐(≥85)、推荐录用(≥70)、谨慎考虑(≥55)、不推荐(<55)
+  - `_build_candidate_profile()`: 构建候选人完整画像
+  - `_evaluate_dimension()`: 单维度 LLM 评估
+  - `_generate_comprehensive_report()`: 生成综合报告
+
+#### 11.5 更新 API 端点集成 AI 服务
+- 更新 `app/api/positions.py`:
+  - `ai_generate_position()`: 集成 `PositionAIService`
+  - 智能降级: AI 未配置时返回模拟结果
+- 更新 `app/api/screening.py`:
+  - `_run_screening_task()`: 集成 `ResumeScreeningService`
+  - 支持真实 AI 筛选和模拟筛选双模式
+- 更新 `app/api/interviews.py`:
+  - 问题生成: 集成 `InterviewAssistService.generate_resume_based_questions()`
+  - 回答评估: 集成 `InterviewAssistService.evaluate_answer()`
+  - 候选问题: 集成 `InterviewAssistService.generate_candidate_questions()`
+  - 报告生成: 集成 `InterviewAssistService.generate_final_report()`
+- 更新 `app/api/recommend.py`:
+  - 综合分析: 集成 `ComprehensiveAnalysisService`
+
+#### 11.6 更新 services 模块导出
+- 更新 `app/services/__init__.py`:
+  - 导出所有 AI 服务类和工厂函数
+  - `AIService`, `PositionAIService`, `InterviewAssistService`, `ComprehensiveAnalysisService`, `ResumeScreeningService`
+
+#### 11.7 测试环境优化
+- 更新 `tests/conftest.py`:
+  - 添加 `os.environ["LLM_API_KEY"] = ""` 在测试时禁用真实 AI 调用
+  - 使测试使用模拟模式，避免 API 调用延迟
+- 更新 `pytest.ini`:
+  - 添加 `markers` 配置: `ai`, `slow` 标记
+- 更新 `tests/test_api/test_positions.py`:
+  - 修复 AI 生成测试断言，兼容模拟模式消息
+- **测试时间优化**: 从 10 分 31 秒 → 22 秒（约 28 倍加速）
+
+#### 验证结果
+- 测试: 125/125 通过
+- AI 服务: 配置正确，模型 `qwen3-max`，API `https://apis.iflow.cn/v1`
+
+### 任务 12: Agent 模块独立与扩展 (计划)
+
+#### 任务规划更新
+- 更新 `tasks.md`:
+  - 新增任务 12: Agent 模块独立与扩展
+  - 原任务 12（最终 Checkpoint）变为任务 13
+- 任务 12 子任务:
+  - 12.1 创建 `app/agents/` 目录结构
+  - 12.2 复刻 Django 多 Agent 架构（简历筛选 6 Agent）
+  - 12.3 复刻 Django 单 LLM 服务（Prompt 与 Django 完全一致）
+  - 12.4 迁移代码到 agents 模块
+  - 12.5 更新 API 层导入
+  - 12.6 更新设计文档
+
+#### 设计决策
+- 选择方案 A: 独立 `app/agents/` 目录
+- 理由:
+  - 职责分离: agents = AI 逻辑，services = 业务编排
+  - 可替换性: 方便后续切换 autogen/langchain
+  - 与 Django 结构呼应
+- 要求:
+  - **Prompt 必须与 Django 完全一致**
+  - 多 Agent 架构完整复刻 6 个 Agent
+  - 单 LLM 调用使用 Django 原版 Prompt
+
 #### 已完成功能
 - ✅ 项目初始化和基础架构
 - ✅ 数据模型实现 (7 个模型)
@@ -851,4 +949,5 @@
 - ✅ 视频分析 API (4 个端点)
 - ✅ 最终推荐 API (3 个端点)
 - ✅ 面试辅助 API (7 个端点)
+- ✅ AI 服务集成 (4 个服务模块)
 - ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 9, 10

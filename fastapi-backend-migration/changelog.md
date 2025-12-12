@@ -291,3 +291,90 @@
 - ✅ 数据模型实现 (7 个模型)
 - ✅ 岗位管理 API (8 个端点)
 - ✅ 属性测试: Property 1, 2, 5, 10
+
+### 任务 5: 简历库 API (/api/library/) (2024-12-12)
+
+#### 5.1 创建简历 Pydantic 模式
+- 创建 `app/schemas/resume.py`
+- 定义请求模式:
+  - `ResumeUploadItem`: 单个简历上传项
+  - `ResumeUploadRequest`: 简历上传请求（支持批量）
+  - `ResumeUpdateRequest`: 简历更新请求
+  - `BatchDeleteRequest`: 批量删除请求
+  - `CheckHashRequest`: 检查哈希值请求
+- 定义响应模式:
+  - `ResumeListItem`: 简历列表项（精简版，含内容预览）
+  - `ResumeDetailResponse`: 简历详情响应
+  - `UploadedResumeItem`: 上传成功的简历项
+  - `SkippedResumeItem`: 跳过的简历项
+  - `ResumeUploadResponse`: 简历上传响应
+  - `LibraryListResponse`: 简历库列表响应
+  - `BatchDeleteResponse`: 批量删除响应
+  - `CheckHashResponse`: 检查哈希值响应
+
+#### 5.2 创建文件工具函数
+- 创建 `app/utils/file_utils.py`:
+  - `generate_hash()`: 生成内容的 SHA256 哈希值
+  - `extract_candidate_name()`: 从简历内容或文件名中提取候选人姓名
+
+#### 5.3 实现简历库列表 API
+- 实现 `GET /api/library/`:
+  - 支持分页参数 `page`, `page_size`
+  - 支持关键词搜索 `keyword`（匹配文件名和候选人姓名）
+  - 支持筛选参数 `is_screened`, `is_assigned`
+  - 返回精简列表，包含内容预览（前200字符）
+  - 文件哈希只返回前8位
+
+#### 5.4 实现简历上传 API
+- 实现 `POST /api/library/`:
+  - 支持批量上传（单次最多50份）
+  - 自动计算文件哈希并去重
+  - 尝试从内容或文件名中提取候选人姓名
+  - 返回 uploaded 和 skipped 列表
+  - 空内容简历会被跳过并记录原因
+
+#### 5.5 实现简历详情、更新、删除 API
+- 实现 `GET /api/library/{id}/`:
+  - 返回完整简历信息，包括完整哈希值
+- 实现 `PUT /api/library/{id}/`:
+  - 只允许更新 `candidate_name` 和 `notes` 字段
+- 实现 `DELETE /api/library/{id}/`:
+  - 物理删除简历记录
+
+#### 5.6 实现批量删除和哈希检查 API
+- 实现 `POST /api/library/batch-delete/`:
+  - 接受 `resume_ids` 数组批量删除
+  - 返回 `deleted_count`
+- 实现 `POST /api/library/check-hash/`:
+  - 检查哈希值列表是否已存在
+  - 返回 `exists` 映射和 `existing_count`
+
+#### 5.7 编写属性测试
+- 创建 `tests/test_api/test_library.py` (24 个测试):
+  - `TestLibraryListAPI`: 4 个测试（列表、分页、搜索、过滤）
+  - `TestLibraryUploadAPI`: 5 个测试（单个、批量、重复、空内容、提取姓名）
+  - `TestLibraryDetailAPI`: 2 个测试（详情、不存在）
+  - `TestLibraryUpdateAPI`: 1 个测试（更新）
+  - `TestLibraryDeleteAPI`: 2 个测试（删除、不存在）
+  - `TestLibraryBatchDeleteAPI`: 1 个测试（批量删除）
+  - `TestLibraryCheckHashAPI`: 2 个测试（已存在、全新）
+  - `TestProperty3PaginationConsistency`: 2 个测试（分页数据一致性）
+  - `TestProperty4FileHashDeduplication`: 2 个测试（文件哈希去重）
+  - `TestProperty6ResumeRetrievable`: 3 个测试（简历上传后可检索）
+
+#### 5.8 注册路由
+- 更新 `app/main.py`:
+  - 导入 `app.api.library` 模块
+  - 注册路由 `prefix="/api/library"`, `tags=["简历库"]`
+
+#### 验证结果
+- 测试: 62/62 通过 (新增 24 个简历库 API 测试)
+- API 端点: 7 个简历库管理端点全部实现
+- 与 Django 后端兼容: 响应格式和字段与原有 API 保持一致
+
+#### 已完成功能
+- ✅ 项目初始化和基础架构
+- ✅ 数据模型实现 (7 个模型)
+- ✅ 岗位管理 API (8 个端点)
+- ✅ 简历库 API (7 个端点)
+- ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 10

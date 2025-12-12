@@ -88,33 +88,33 @@
 - [x] 4. Checkpoint - 确保所有测试通过
   - [x] 确保所有测试通过，如有问题请询问用户
 
-- [ ] 5. 简历库 API (/api/library/)
-  - [ ] 5.1 创建简历 Pydantic 模式
+- [x] 5. 简历库 API (/api/library/)
+  - [x] 5.1 创建简历 Pydantic 模式
     - 创建 app/schemas/resume.py
     - 定义 ResumeUpload, ResumeResponse, LibraryListResponse
     - _需求: 1.2_
-  - [ ] 5.2 实现简历库列表 API
+  - [x] 5.2 实现简历库列表 API
     - 实现 GET /api/library/
     - 支持分页和筛选参数 (keyword, is_screened, is_assigned)
     - _需求: 3.1_
-  - [ ] 5.3 实现简历上传 API
+  - [x] 5.3 实现简历上传 API
     - 实现 POST /api/library/
     - 处理文件哈希计算和去重
     - _需求: 3.2_
-  - [ ] 5.4 实现简历详情、更新、删除 API
+  - [x] 5.4 实现简历详情、更新、删除 API
     - 实现 GET/PUT/DELETE /api/library/{id}/
     - _需求: 3.3, 3.4, 3.5_
-  - [ ] 5.5 实现批量删除和哈希检查 API
+  - [x] 5.5 实现批量删除和哈希检查 API
     - 实现 POST /api/library/batch-delete/
     - 实现 POST /api/library/check-hash/
     - _需求: 3.6, 3.7_
-  - [ ] 5.6 编写属性测试：分页数据一致性
+  - [x] 5.6 编写属性测试：分页数据一致性
     - **Property 3: 分页数据一致性**
     - **验证: 需求 3.1**
-  - [ ] 5.7 编写属性测试：文件哈希去重
+  - [x] 5.7 编写属性测试：文件哈希去重
     - **Property 4: 文件哈希去重**
     - **验证: 需求 3.7**
-  - [ ] 5.8 编写属性测试：简历上传后可检索
+  - [x] 5.8 编写属性测试：简历上传后可检索
     - **Property 6: 简历上传后可检索**
     - **验证: 需求 3.2, 3.3**
 

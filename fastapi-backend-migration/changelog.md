@@ -378,3 +378,206 @@
 - ✅ 岗位管理 API (8 个端点)
 - ✅ 简历库 API (7 个端点)
 - ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 10
+
+### 任务 6: 简历筛选 API (/api/screening/) (2024-12-12)
+
+#### 6.1 创建筛选相关 Pydantic 模式
+- 创建 `app/schemas/screening.py` (~320行)
+- 定义筛选任务模式:
+  - `ResumeInputItem`: 筛选任务中的单个简历输入
+  - `PositionInput`: 岗位信息输入
+  - `ScreeningTaskCreateRequest`: 提交筛选任务请求
+  - `ScreeningTaskResponse`: 筛选任务创建响应
+  - `TaskStatusResponse`: 任务状态响应
+  - `TaskListResponse`: 任务列表响应
+  - `TaskDeleteResponse`: 任务删除响应
+- 定义报告相关模式:
+  - `VideoAnalysisInfo`: 视频分析简要信息
+  - `ResumeDataItem`: 简历数据项
+  - `ReportInfo`: 报告信息
+  - `ReportDetailResponse`: 报告详情响应
+  - `ScreeningScoreDetail`: 筛选评分详情
+- 定义简历数据模式:
+  - `ResumeDataListItem`: 简历数据列表项
+  - `ResumeDataListResponse`: 简历数据列表响应
+  - `ResumeDataCreateRequest`: 创建简历数据请求
+  - `ResumeDataCreateResponse`: 创建简历数据响应
+- 定义简历组模式:
+  - `ResumeInGroup`: 组内简历信息
+  - `ResumeGroupListItem`: 简历组列表项
+  - `ResumeGroupListResponse`: 简历组列表响应
+  - `ResumeGroupDetailResponse`: 简历组详情响应
+  - `CreateResumeGroupRequest`: 创建简历组请求
+  - `CreateResumeGroupResponse`: 创建简历组响应
+  - `AddResumeToGroupRequest`: 添加简历到组请求
+  - `RemoveResumeFromGroupRequest`: 从组移除简历请求
+  - `SetGroupStatusRequest`: 设置组状态请求
+  - `GroupOperationResponse`: 组操作响应
+- 定义视频关联模式:
+  - `LinkVideoRequest`: 关联视频请求
+  - `UnlinkVideoRequest`: 解除视频关联请求
+  - `LinkVideoResponse`: 关联视频响应
+  - `UnlinkVideoResponse`: 解除视频关联响应
+- 定义开发工具模式:
+  - `GenerateResumesRequest`: 生成随机简历请求
+  - `GenerateResumesResponse`: 生成随机简历响应
+  - `GeneratedResumeItem`: 生成的简历项
+  - `SkippedResumeItem`: 跳过的简历项
+  - `ForceErrorRequest`: 强制错误请求
+  - `ForceErrorResponse`: 强制错误响应
+
+#### 6.2 实现筛选任务提交 API
+- 实现 `POST /api/screening/`:
+  - 创建 `ScreeningTask` 任务记录
+  - 立即保存简历数据到 `Resume` 表（支持去重）
+  - 使用 `BackgroundTasks` 异步执行筛选任务
+  - 返回 202 状态码和 task_id
+- 实现后台任务 `_run_screening_task()`:
+  - 模拟筛选处理流程（实际 AI 服务待任务 11 集成）
+  - 更新任务进度 `progress`, `current_step`, `current_speaker`
+  - 生成模拟评分和筛选总结
+  - 生成 Markdown 格式报告内容
+  - 支持强制错误测试钩子
+
+#### 6.3 实现任务列表和状态查询 API
+- 实现 `GET /api/screening/tasks/`:
+  - 支持分页参数 `page`, `page_size`
+  - 支持状态过滤 `status`
+  - 使用 `selectinload` 优化关联查询
+  - 返回任务列表含简历数据和报告信息
+- 实现 `GET /api/screening/tasks/{task_id}/status/`:
+  - 返回完整任务状态信息
+  - 包含 `resume_data` 数组和 `reports` 数组
+  - 运行中时返回 `current_speaker`
+  - 失败时返回 `error_message`
+- 实现 `DELETE /api/screening/tasks/{task_id}/`:
+  - 删除任务及关联数据
+
+#### 6.4 实现报告查询和下载 API
+- 实现 `GET /api/screening/reports/{report_id}/`:
+  - 返回筛选报告详情
+  - 包含评分、总结、简历内容等
+- 实现 `GET /api/screening/reports/{report_id}/download/`:
+  - 动态生成 Markdown 格式报告
+  - 支持中文文件名下载
+  - 使用 `UTF-8` 编码和 `Content-Disposition` 头
+
+#### 6.5 实现简历数据 API
+- 实现 `GET /api/screening/data/`:
+  - 只返回已筛选的简历 (`is_screened=True`)
+  - 支持过滤参数 `candidate_name`, `position_title`
+  - 支持分页参数 `page`, `page_size`
+  - 包含视频分析信息（大五人格分数）
+- 实现 `POST /api/screening/data/`:
+  - 手动创建简历数据记录
+  - 自动计算文件哈希和提取候选人姓名
+  - 标记为已筛选状态
+
+#### 6.6 实现简历组管理 API
+- 设计说明: 使用 `position_title` 作为组标识，通过哈希值前36位生成组ID
+- 实现 `GET /api/screening/groups/`:
+  - 按 `position_title` 聚合已筛选简历
+  - 支持过滤参数 `position_title`, `status`
+  - 支持 `include_resumes` 参数控制是否返回组内简历
+  - 自动计算组状态（是否有视频关联）
+- 实现 `POST /api/screening/groups/create/`:
+  - 创建简历组（设置简历的岗位关联）
+  - 更新简历的 `position_title` 字段
+- 实现 `GET /api/screening/groups/{group_id}/`:
+  - 返回组详情和汇总信息
+  - 包含组内简历列表（含视频分析）
+- 实现 `POST /api/screening/groups/add-resume/`:
+  - 向组添加简历（更新 `position_title`）
+  - 返回更新后的组简历数量
+- 实现 `POST /api/screening/groups/remove-resume/`:
+  - 从组移除简历（清空 `position_title`）
+  - 返回更新后的组简历数量
+- 实现 `POST /api/screening/groups/set-status/`:
+  - 设置组状态（简化实现，实际应用可扩展）
+
+#### 6.7 实现视频关联 API
+- 实现 `POST /api/screening/videos/link/`:
+  - 建立简历与视频分析的关联
+  - 检查简历和视频是否存在
+  - 检查是否已有关联，防止重复
+  - 更新 `video_analysis_id` 外键
+- 实现 `POST /api/screening/videos/unlink/`:
+  - 解除简历与视频分析的关联
+  - 返回解除关联的信息
+
+#### 6.8 实现开发测试工具 API
+- 实现 `POST /api/screening/dev/generate-resumes/`:
+  - 根据岗位要求生成模拟简历
+  - 支持 `count` 参数（1-20）
+  - 检查空岗位名称返回 400 错误
+  - 自动去重（基于文件哈希）
+  - 添加到简历库（`is_screened=False`）
+- 实现 `GET /api/screening/dev/force-error/`:
+  - 查询当前强制错误状态
+  - 使用内存缓存存储（简化实现）
+- 实现 `POST /api/screening/dev/force-error/`:
+  - 设置强制筛选任务失败
+  - 支持 `force_error`, `error_message`, `error_type` 参数
+- 实现 `POST /api/screening/dev/reset-state/`:
+  - 重置所有测试相关的缓存和状态
+
+#### 6.9 编写属性测试
+- 创建 `tests/test_api/test_screening.py` (27 个测试)
+- 测试类 `TestScreeningTaskSubmitAPI` (2 个测试):
+  - 提交筛选任务
+  - 提交任务创建简历记录
+- 测试类 `TestScreeningTaskStatusAPI` (2 个测试):
+  - 获取任务状态
+  - 获取不存在的任务状态
+- 测试类 `TestScreeningTaskListAPI` (2 个测试):
+  - 获取空任务列表
+  - 分页获取任务列表
+- 测试类 `TestScreeningTaskDeleteAPI` (1 个测试):
+  - 删除任务
+- 测试类 `TestScreeningReportAPI` (2 个测试):
+  - 获取不存在的报告
+  - 下载不存在的报告
+- 测试类 `TestResumeDataAPI` (3 个测试):
+  - 获取空简历数据列表
+  - 创建简历数据
+  - 按候选人姓名过滤
+- 测试类 `TestResumeGroupAPI` (2 个测试):
+  - 获取空简历组列表
+  - 创建简历组
+- 测试类 `TestVideoLinkAPI` (2 个测试):
+  - 关联视频时简历不存在
+  - 解除关联时简历不存在
+- 测试类 `TestDevToolsAPI` (5 个测试):
+  - 生成随机简历
+  - 不提供岗位名称时失败
+  - 获取默认强制错误状态
+  - 设置强制错误
+  - 重置测试状态
+- 测试类 `TestProperty7TaskStatusConsistency` (3 个测试):
+  - **Property 7: 任务状态一致性** - 验证需求 4.3
+  - 新任务有有效状态
+  - 所有任务状态都有效
+  - 按状态过滤返回一致结果
+- 测试类 `TestProperty8GroupMemberCount` (3 个测试):
+  - **Property 8: 简历组成员计数** - 验证需求 5.1
+  - 新组计数匹配成员数
+  - 组列表计数一致性
+  - 添加简历后计数递增
+
+#### 6.10 注册路由
+- 更新 `app/main.py`:
+  - 导入 `app.api.screening` 模块
+  - 注册路由 `prefix="/api/screening"`, `tags=["简历筛选"]`
+
+#### 验证结果
+- 测试: 89/89 通过 (新增 27 个简历筛选 API 测试)
+- API 端点: 18 个简历筛选端点全部实现
+- 与 Django 后端兼容: 响应格式和字段与原有 API 保持一致
+
+#### 已完成功能
+- ✅ 项目初始化和基础架构
+- ✅ 数据模型实现 (7 个模型)
+- ✅ 岗位管理 API (8 个端点)
+- ✅ 简历库 API (7 个端点)
+- ✅ 简历筛选 API (18 个端点)
+- ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 10

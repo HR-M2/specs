@@ -118,28 +118,28 @@
     - **Property 6: 简历上传后可检索**
     - **验证: 需求 3.2, 3.3**
 
-- [ ] 6. 简历筛选 API (/api/screening/)
-  - [ ] 6.1 创建筛选相关 Pydantic 模式
+- [x] 6. 简历筛选 API (/api/screening/)
+  - [x] 6.1 创建筛选相关 Pydantic 模式
     - 创建 app/schemas/screening.py
     - 定义任务、报告、简历组相关模式
     - _需求: 1.2_
-  - [ ] 6.2 实现筛选任务提交 API
+  - [x] 6.2 实现筛选任务提交 API
     - 实现 POST /api/screening/
     - 创建异步任务处理
     - _需求: 4.1_
-  - [ ] 6.3 实现任务列表和状态查询 API
+  - [x] 6.3 实现任务列表和状态查询 API
     - 实现 GET /api/screening/tasks/
     - 实现 GET /api/screening/tasks/{task_id}/status/
     - 实现 DELETE /api/screening/tasks/{task_id}/
     - _需求: 4.2, 4.3, 4.4_
-  - [ ] 6.4 实现报告查询和下载 API
+  - [x] 6.4 实现报告查询和下载 API
     - 实现 GET /api/screening/reports/{report_id}/
     - 实现 GET /api/screening/reports/{report_id}/download/
     - _需求: 4.5, 4.6_
-  - [ ] 6.5 实现简历数据 API
+  - [x] 6.5 实现简历数据 API
     - 实现 GET/POST /api/screening/data/
     - _需求: 4.7_
-  - [ ] 6.6 实现简历组管理 API
+  - [x] 6.6 实现简历组管理 API
     - 实现 GET /api/screening/groups/
     - 实现 POST /api/screening/groups/create/
     - 实现 GET /api/screening/groups/{group_id}/
@@ -147,19 +147,19 @@
     - 实现 POST /api/screening/groups/remove-resume/
     - 实现 POST /api/screening/groups/set-status/
     - _需求: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
-  - [ ] 6.7 实现视频关联 API
+  - [x] 6.7 实现视频关联 API
     - 实现 POST /api/screening/videos/link/
     - 实现 POST /api/screening/videos/unlink/
     - _需求: 6.1, 6.2_
-  - [ ] 6.8 实现开发测试工具 API
+  - [x] 6.8 实现开发测试工具 API
     - 实现 POST /api/screening/dev/generate-resumes/
     - 实现 GET/POST /api/screening/dev/force-error/
     - 实现 POST /api/screening/dev/reset-state/
     - _需求: 7.1, 7.2, 7.3_
-  - [ ] 6.9 编写属性测试：任务状态一致性
+  - [x] 6.9 编写属性测试：任务状态一致性
     - **Property 7: 任务状态一致性**
     - **验证: 需求 4.3**
-  - [ ] 6.10 编写属性测试：简历组成员计数
+  - [x] 6.10 编写属性测试：简历组成员计数
     - **Property 8: 简历组成员计数**
     - **验证: 需求 5.1**
 

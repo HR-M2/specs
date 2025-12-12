@@ -25,39 +25,39 @@
     - **Property 1: 统一响应格式**
     - **验证: 需求 1.4**
 
-- [ ] 2. 数据模型实现
-  - [ ] 2.1 创建 Position 模型
+- [x] 2. 数据模型实现
+  - [x] 2.1 创建 Position 模型
     - 创建 app/models/position.py
     - 定义岗位字段：position, department, required_skills 等
     - _需求: 2.1, 12.1, 12.2_
-  - [ ] 2.2 创建 Resume 模型
+  - [x] 2.2 创建 Resume 模型
     - 创建 app/models/resume.py
     - 定义统一简历字段：filename, file_hash, content, screening_score 等
     - _需求: 3.1, 4.5, 12.1, 12.2_
-  - [ ] 2.3 创建 ScreeningTask 模型
+  - [x] 2.3 创建 ScreeningTask 模型
     - 创建 app/models/screening.py
     - 定义任务状态枚举和字段
     - _需求: 4.1, 12.1_
-  - [ ] 2.4 创建 VideoAnalysis 模型
+  - [x] 2.4 创建 VideoAnalysis 模型
     - 创建 app/models/video.py
     - 定义视频分析字段和状态
     - _需求: 8.1, 12.1_
-  - [ ] 2.5 创建 InterviewSession 模型
+  - [x] 2.5 创建 InterviewSession 模型
     - 创建 app/models/interview.py
     - 定义会话字段和 JSON 问答记录
     - _需求: 10.1, 12.1_
-  - [ ] 2.6 创建 ComprehensiveAnalysis 模型
+  - [x] 2.6 创建 ComprehensiveAnalysis 模型
     - 创建 app/models/recommend.py
     - 定义综合分析结果字段
     - _需求: 9.1, 12.1_
-  - [ ] 2.7 创建 ResumePositionAssignment 关联模型
+  - [x] 2.7 创建 ResumePositionAssignment 关联模型
     - 在 app/models/position.py 中添加关联表
     - _需求: 2.6, 12.4_
-  - [ ] 2.8 生成数据库迁移并初始化
+  - [x] 2.8 生成数据库迁移并初始化
     - 运行 alembic revision 生成迁移脚本
     - 运行 alembic upgrade head 创建表
     - _需求: 12.5_
-  - [ ] 2.9 编写属性测试：UUID 格式一致性
+  - [x] 2.9 编写属性测试：UUID 格式一致性
     - **Property 10: UUID 格式一致性**
     - **验证: 需求 12.2**
 

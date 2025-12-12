@@ -1089,6 +1089,65 @@ app/
 - API 端点: 49 个业务端点全部实现并验证
 - 前端兼容性: 完全兼容，可无缝切换
 
+### 任务 14: 查漏补缺
+
+#### 14.1 修复分页参数验证问题 (2024-12-12)
+- **问题**: 前端请求 `/api/screening/tasks/?status=completed&page=1&page_size=100` 返回 422 错误
+- **原因**: FastAPI 的 `page_size` 参数定义了 `le=50` 约束，前端请求 `page_size=100` 超出限制
+- **修复**: 
+  - `app/api/screening.py` `/tasks/` 端点: `page_size` 限制 `le=50` → `le=100`
+  - `app/api/screening.py` `/data/` 端点: `page_size` 限制 `le=50` → `le=100`
+
+#### 14.2 修复 AI 生成岗位要求缺少薪资范围字段 (2024-12-12)
+- **问题**: AI 智能生成岗位要求时，返回结果中缺少 `salary_range` 字段
+- **原因**: `app/schemas/position.py` 中的 `AIGenerateResponse` schema 未定义 `salary_range` 字段，Pydantic 序列化时将其过滤掉
+- **修复**: 在 `AIGenerateResponse` 中添加 `salary_range: List[int]` 字段
+- **验证**: 通过 API 测试确认 LLM 返回的薪资范围 `[20000, 40000]` 正确传递到前端
+- **优化**: 移除该端点的 `response_model` 限制，改为宽松模式，避免未来 LLM 返回新字段被过滤
+
+#### 14.3 完善随机简历生成器 LLM 集成 (2024-12-12)
+- **问题**: `/api/screening/dev/generate-resumes/` 生成的简历使用硬编码模拟数据（如 "测试候选人1"）
+- **原因**: 该功能为占位实现，未集成 LLM 服务
+- **修复**: 
+  - 添加 `_generate_resume_with_llm()` 函数调用 LLM 生成真实简历内容
+  - 添加 `RESUME_GENERATION_PROMPT` prompt 模板
+  - 添加 LLM 配置验证，未配置时返回明确错误
+  - 添加错误处理，LLM 调用失败时返回详细错误信息
+
+#### 14.4 修复岗位简历列表 screening_score 类型不匹配 (2024-12-12)
+- **问题**: `/api/positions/?include_resumes=true` 返回 500 错误，ResponseValidationError
+- **原因**: `app/schemas/position.py` 中 `ResumeInPosition.screening_score` 定义为 `float`，实际数据为字典
+- **修复**: 将 `screening_score: Optional[float]` 改为 `screening_score: Optional[Dict[str, Any]]`
+
+### 任务 15: 响应数据格式验证测试 (2024-12-12)
+
+#### 15.1 背景与问题
+- **发现**: 任务 14.4 的 `screening_score` 类型不匹配问题未被单元测试检测到
+- **根因分析**:
+  1. 测试数据不完整：测试中创建的简历 `screening_score` 为 `None`，不会触发类型验证
+  2. 缺少边界场景：未测试带真实复杂数据（字典、嵌套对象）的响应
+  3. 无专门验证：缺少针对 Pydantic Schema 与实际数据结构一致性的测试
+
+#### 15.2 已完成的初步测试 (test_schema_validation.py)
+新增 `tests/test_api/test_schema_validation.py`，包含 6 个基础验证测试：
+
+| 测试类 | 覆盖端点 | 验证内容 |
+|--------|----------|----------|
+| `TestPositionSchemaValidation` | `/api/positions/` | `ResumeInPosition.screening_score` 字典类型 |
+| `TestScreeningSchemaValidation` | `/api/screening/data/` | `ResumeDataListItem.screening_score` |
+| `TestInterviewSchemaValidation` | `/api/interviews/sessions/` | 会话创建响应格式 |
+| `TestRecommendSchemaValidation` | `/api/recommend/analysis/` | 综合分析响应格式 |
+| `TestVideoSchemaValidation` | `/api/videos/` | `VideoListItem.analysis_result` 嵌套对象 |
+
+#### 15.3 测试更新
+- **文件**: `tests/test_api/test_screening.py`
+- **修改**: `test_generate_resumes` 测试适应 LLM 集成后的行为
+  - LLM 未配置时：验证返回 500 错误及错误消息包含 "LLM"
+  - LLM 已配置时：验证成功响应格式
+
+#### 15.4 待完善的验证范围
+详见 `tasks.md` 任务 15 规划，需要对 49 个 API 端点进行系统性的数据格式验证。
+
 ---
 
 ## 项目完成总结

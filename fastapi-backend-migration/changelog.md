@@ -612,3 +612,99 @@
 - ✅ 简历库 API (7 个端点)
 - ✅ 简历筛选 API (18 个端点)
 - ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 10
+
+### 任务 8: 视频分析 API (/api/videos/) (2024-12-12)
+
+#### 8.1 创建视频分析 Pydantic 模式
+- 创建 `app/schemas/video.py` (~125行)
+- 定义状态枚举:
+  - `VideoStatus`: PENDING, PROCESSING, COMPLETED, FAILED
+- 定义请求模式:
+  - `VideoUploadRequest`: 视频上传请求（候选人姓名、应聘职位等）
+  - `VideoUpdateRequest`: 视频分析结果更新请求（评分、总结、状态）
+- 定义响应模式:
+  - `VideoAnalysisResult`: 大五人格评分结果（fraud_score, neuroticism_score 等）
+  - `VideoResponse`: 视频分析完整响应
+  - `VideoUploadResponse`: 视频上传成功响应
+  - `VideoStatusResponse`: 视频分析状态响应
+  - `VideoUpdateResponseData`: 视频更新响应数据
+  - `VideoListItem`: 视频列表项
+  - `VideoListData`: 视频列表响应数据
+
+#### 8.2 实现视频分析 API
+- 创建 `app/api/videos.py` (~400行)
+- 实现 `GET /api/videos/`:
+  - 支持分页参数 `page`, `page_size`
+  - 支持筛选参数 `candidate_name`, `position_applied`, `status`
+  - 按创建时间倒序排列
+  - 完成状态的视频返回分析结果
+- 实现 `POST /api/videos/upload/`:
+  - 使用 `File` 和 `Form` 处理 multipart/form-data 上传
+  - 保存视频文件到 `media/videos/` 目录
+  - 创建 `VideoAnalysis` 记录
+  - 可选关联已筛选的简历数据
+  - 使用 `BackgroundTasks` 启动后台分析任务
+  - 返回 201 状态码
+- 实现 `GET /api/videos/{video_id}/status/`:
+  - 返回视频分析状态和结果
+  - 完成时返回 `analysis_result`, `summary`, `confidence_score`
+  - 失败时返回 `error_message`
+- 实现 `POST /api/videos/{video_id}/`:
+  - 更新视频分析结果（各项评分、总结）
+  - 默认更新状态为 `completed`
+  - 使用 `selectinload` 预加载关联简历避免懒加载问题
+
+#### 8.3 实现后台分析任务
+- 实现 `simulate_video_analysis()` 后台任务:
+  - 模拟视频分析处理（2秒延迟）
+  - 生成模拟的大五人格评分
+  - 更新分析状态为 `COMPLETED` 或 `FAILED`
+  - 使用独立数据库会话（`async_session_factory`）
+
+#### 8.4 编写测试用例
+- 创建 `tests/test_api/test_videos.py` (16 个测试)
+- 测试类 `TestVideoList` (5 个测试):
+  - 获取空视频列表
+  - 获取有数据的视频列表
+  - 按候选人姓名筛选
+  - 按状态筛选
+  - 分页测试
+- 测试类 `TestVideoUpload` (2 个测试):
+  - 视频上传成功
+  - 自定义视频名称上传
+- 测试类 `TestVideoStatus` (4 个测试):
+  - 查询待处理状态的视频
+  - 查询已完成状态的视频（含分析结果）
+  - 查询失败状态的视频（含错误信息）
+  - 查询不存在的视频
+- 测试类 `TestVideoUpdate` (3 个测试):
+  - 更新视频分析结果
+  - 更新不存在的视频
+  - 部分更新视频结果
+- 测试类 `TestVideoResponseFormat` (2 个测试):
+  - 列表响应格式（统一响应格式验证）
+  - 状态查询响应格式
+
+#### 8.5 注册路由
+- 更新 `app/main.py`:
+  - 导入 `app.api.videos` 模块
+  - 注册路由 `prefix="/api/videos"`, `tags=["视频分析"]`
+
+#### Bug 修复
+- 修复 `update_video_result` 函数懒加载问题:
+  - 问题: 访问 `video.linked_resume` 触发同步懒加载导致 `MissingGreenlet` 错误
+  - 解决: 使用 `selectinload(VideoAnalysis.linked_resume)` 预加载关联数据
+
+#### 验证结果
+- 测试: 105/105 通过 (新增 16 个视频分析 API 测试)
+- API 端点: 4 个视频分析端点全部实现
+- 与 Django 后端兼容: 响应格式和字段与原有 API 保持一致
+
+#### 已完成功能
+- ✅ 项目初始化和基础架构
+- ✅ 数据模型实现 (7 个模型)
+- ✅ 岗位管理 API (8 个端点)
+- ✅ 简历库 API (7 个端点)
+- ✅ 简历筛选 API (18 个端点)
+- ✅ 视频分析 API (4 个端点)
+- ✅ 属性测试: Property 1, 2, 3, 4, 5, 6, 7, 8, 10

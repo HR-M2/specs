@@ -166,11 +166,11 @@
 - [x] 7. Checkpoint - 确保所有测试通过
   - [x] 确保所有测试通过，如有问题请询问用户
 
-- [ ] 8. 视频分析 API (/api/videos/)
-  - [ ] 8.1 创建视频分析 Pydantic 模式
+- [x] 8. 视频分析 API (/api/videos/)
+  - [x] 8.1 创建视频分析 Pydantic 模式
     - 创建 app/schemas/video.py
     - _需求: 1.2_
-  - [ ] 8.2 实现视频分析 API
+  - [x] 8.2 实现视频分析 API
     - 实现 GET /api/videos/
     - 实现 POST /api/videos/upload/
     - 实现 POST /api/videos/{video_id}/

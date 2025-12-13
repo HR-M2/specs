@@ -230,3 +230,86 @@ python manage.py makemigrations --dry-run
 - [x] 模型关系正确（外键关联符合设计）
 - [x] makemigrations 无错误
 
+---
+
+## 2024-12-13 - Phase 3: 数据库迁移 ✅
+
+### 3.1 创建数据库迁移文件
+
+**执行步骤:**
+1. 删除旧数据库 `db.sqlite3`
+2. 删除所有旧迁移文件（保留 `__init__.py`）
+3. 运行 `python manage.py makemigrations` 生成新迁移
+
+**生成的迁移文件（7个）:**
+1. `position_settings/0001_initial.py` - Position模型
+2. `resume/0001_initial.py` - Resume模型
+3. `resume_screening/0001_initial.py` - ScreeningTask模型
+4. `video_analysis/0001_initial.py` - VideoAnalysis模型
+5. `interview_assist/0001_initial.py` - InterviewSession模型
+6. `final_recommend/0001_initial.py` - ComprehensiveAnalysis模型
+7. (Django系统迁移)
+
+### 3.2 执行数据库迁移
+
+**配置变更:**
+
+1. **`config/settings/base.py`** - 移除废弃应用:
+   ```python
+   # 移除: 'apps.resume_library',  # 已合并到 apps.resume
+   ```
+
+2. **`config/urls.py`** - 移除废弃路由:
+   ```python
+   # 移除: path('api/library/', include('apps.resume_library.urls')),
+   ```
+
+**代码修复（依赖更新）:**
+
+1. **`apps/resume_screening/views/dev_tools.py`**:
+   - 更新导入: `from apps.resume_library.models import ResumeLibrary` → `from apps.resume.models import Resume`
+   - 更新模型引用: `ResumeLibrary` → `Resume`
+   - 适配新字段: `is_screened=False, is_assigned=False` → `status=Resume.Status.PENDING`
+
+2. **`apps/resume_screening/views/__init__.py`**:
+   - 移除对 `apps.resume_library.views` 的导入
+   - 移除废弃的视图重导出
+
+**迁移结果:**
+```
+python manage.py migrate
+# 所有迁移成功应用
+```
+
+### 3.3 验证数据库结构
+
+**业务表（6个）:**
+
+| 表名 | 对应模型 | 外键关系 |
+|:-----|:---------|:---------|
+| `positions` | Position | - |
+| `resumes` | Resume | → positions |
+| `screening_tasks` | ScreeningTask | → positions |
+| `video_analyses` | VideoAnalysis | → resumes |
+| `interview_sessions` | InterviewSession | → resumes |
+| `comprehensive_analyses` | ComprehensiveAnalysis | → resumes |
+
+**索引验证:**
+- `positions`: title, is_active
+- `resumes`: file_hash, candidate_name, status, position_id
+- `screening_tasks`: position_id
+- `video_analyses`: status, created_at, resume_id
+- `interview_sessions`: resume_id
+- `comprehensive_analyses`: resume_id
+
+### Checkpoint 2 验证
+
+- [x] 数据库迁移成功
+- [x] 表数量为 6（从原11个简化）
+- [x] Django admin 可访问（http://127.0.0.1:8000/admin/）
+- [x] `python manage.py check` 无问题
+
+### 下一步
+
+- Phase 4: Serializers 更新
+

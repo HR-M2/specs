@@ -311,10 +311,10 @@
 
 ## Checkpoints
 
-### Checkpoint 1: Phase 2 完成后
-- [ ] 所有新模型定义完成
-- [ ] 模型关系正确
-- [ ] makemigrations 无错误
+### Checkpoint 1: Phase 2 完成后 ✅
+- [x] 所有新模型定义完成
+- [x] 模型关系正确
+- [x] makemigrations 无错误
 
 ### Checkpoint 2: Phase 3 完成后
 - [ ] 数据库迁移成功

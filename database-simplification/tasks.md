@@ -279,17 +279,18 @@
 
 ---
 
-## Phase 10: 测试与验证
+## Phase 10: 测试与验证 ✅
 
-- [ ] 10.1 更新后端单元测试
-  - 更新各模块测试文件
-  - 删除废弃模型相关测试
-  - 添加新模型测试
+- [x] 10.1 更新后端单元测试
+  - 创建 6 个模块测试文件（Position, Resume, ScreeningTask, VideoAnalysis, InterviewSession, ComprehensiveAnalysis）
+  - 更新 `tests/test_resume_screening.py` 使用新 ScreeningTask 模型，添加 mock 阻止后台线程
+  - 更新 `tests/test_video_analysis.py` 使用新 VideoAnalysis 模型和 Resume 关联
+  - 修复 `apps/interview_assist/services/__init__.py` 循环导入问题
   - _Requirements: 7.1-7.4_
 
-- [ ] 10.2 运行后端测试
-  - 运行 `python manage.py test`
-  - 确保所有测试通过
+- [x] 10.2 运行后端测试
+  - 运行 `python manage.py test` 成功
+  - **63 个测试全部通过**
   - _Requirements: 7.1-7.4_
 
 - [ ] 10.3 手动集成测试
@@ -342,12 +343,17 @@
 - [x] API 端点已迁移到 /api/resumes/
 - [x] Django check 无警告
 
+### Checkpoint 5: Phase 10 完成后 ✅
+- [x] 后端测试全部通过（63 tests OK）
+- [x] 前端编译成功
+- [ ] API 文档已更新（Phase 11）
+
 ### Final Checkpoint
-- [ ] 后端测试全部通过
-- [ ] 前端编译成功
+- [x] 后端测试全部通过
+- [x] 前端编译成功
 - [ ] API 文档已更新
-- [ ] 表数量: 11 -> 6 ✓
-- [ ] 废弃模型: 1 -> 0 ✓
+- [x] 表数量: 11 -> 6 ✓
+- [x] 废弃模型: 1 -> 0 ✓
 
 ---
 

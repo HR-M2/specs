@@ -173,22 +173,22 @@
 
 ---
 
-## Phase 6: URL 路由更新
+## Phase 6: URL 路由更新 ✅
 
-- [ ] 6.1 创建 Resume URL 路由
+- [x] 6.1 创建 Resume URL 路由
   - 文件: `apps/resume/urls.py`
-  - 定义 `/api/resumes/` 路由
+  - 定义 `/api/resumes/` 路由（列表、详情、批量删除、哈希检查、分配、筛选结果、统计）
   - 合并原 `/api/library/` 功能
   - _Requirements: 6.1_
 
-- [ ] 6.2 更新主路由配置
+- [x] 6.2 更新主路由配置
   - 文件: `config/urls.py`
-  - 添加 resume 模块路由
-  - 保留 library 路由作为兼容（可选）
+  - 添加 resume 模块路由 `/api/resumes/`
+  - 保留 `/api/library/` 路由作为兼容（使用不同 namespace）
   - _Requirements: 6.1_
 
-- [ ] 6.3 更新各模块 URL 路由
-  - 适配新的视图函数
+- [x] 6.3 更新各模块 URL 路由
+  - 修复 `ReportDownloadView` 使用新的 Resume 模型
   - 确保路径与 API 文档一致
   - _Requirements: 6.1_
 
@@ -321,10 +321,10 @@
 - [x] 表数量为 6
 - [x] Django admin 可访问
 
-### Checkpoint 3: Phase 6 完成后
-- [ ] 所有 API 端点可访问
-- [ ] 返回格式正确
-- [ ] 无 500 错误
+### Checkpoint 3: Phase 6 完成后 ✅
+- [x] 所有 API 端点可访问
+- [x] 返回格式正确
+- [x] 无 500 错误
 
 ### Checkpoint 4: Phase 9 完成后
 - [ ] 前端编译通过

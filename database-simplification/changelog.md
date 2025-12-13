@@ -539,3 +539,74 @@ python manage.py check
 
 - Phase 6: URL 路由更新
 
+---
+
+## 2024-12-14 - Phase 6: URL 路由更新 ✅
+
+### 6.1 创建 Resume URL 路由 ✅
+
+**文件:** `apps/resume/urls.py`（新建）
+
+**定义的路由:**
+| 路径 | 视图 | 方法 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `/api/resumes/` | ResumeListView | GET/POST | 列表/批量上传 |
+| `/api/resumes/stats/` | ResumeStatsView | GET | 统计数据 |
+| `/api/resumes/batch-delete/` | ResumeBatchDeleteView | POST | 批量删除 |
+| `/api/resumes/check-hash/` | ResumeCheckHashView | POST | 哈希检查 |
+| `/api/resumes/assign/` | ResumeAssignView | POST | 岗位分配 |
+| `/api/resumes/<uuid>/` | ResumeDetailView | GET/PUT/DELETE | 详情/更新/删除 |
+| `/api/resumes/<uuid>/screening/` | ResumeScreeningResultView | GET/PUT | 筛选结果 |
+
+### 6.2 更新主路由配置 ✅
+
+**文件:** `config/urls.py`
+
+**变更:**
+- 添加 `/api/resumes/` 路由指向 `apps.resume.urls`
+- 添加 `/api/library/` 兼容路由（使用不同 namespace 'resume_library'）
+
+```python
+path('api/resumes/', include('apps.resume.urls')),
+path('api/library/', include(('apps.resume.urls', 'resume_library'))),  # 兼容旧路径
+```
+
+### 6.3 更新各模块 URL 路由 ✅
+
+**修复文件:** `apps/resume_screening/views/task.py`
+
+**变更:**
+- `ReportDownloadView.handle_get()`: 
+  - 改用 `Resume` 模型替代已删除的 `ResumeData` 和 `ScreeningReport`
+  - `report_id` 现在直接对应 `resume_id`
+  - 支持从 `Resume.screening_report` 直接返回或动态生成报告
+
+- `ReportDownloadView._generate_markdown_report()`:
+  - 参数类型从 `ResumeData` 改为 `Resume`
+  - 岗位信息从 `resume.position.title` 获取
+  - 评分信息从 `resume.screening_result` JSON 获取
+
+### Checkpoint 3 验证 ✅
+
+**API 端点测试结果:**
+
+| 端点 | 状态 | 说明 |
+|:-----|:-----|:-----|
+| `/api/resumes/` | 200 ✅ | 简历列表 |
+| `/api/resumes/stats/` | 200 ✅ | 简历统计 |
+| `/api/library/` | 200 ✅ | 兼容路径 |
+| `/api/positions/` | 200 ✅ | 岗位列表 |
+| `/api/screening/tasks/` | 200 ✅ | 筛选任务 |
+| `/api/videos/` | 200 ✅ | 视频列表 |
+| `/api/recommend/stats/` | 200 ✅ | 推荐统计 |
+| `/api/interviews/sessions/` | 400 ✅ | 需要 resume_id（符合预期）|
+
+**验证结论:**
+- [x] 所有 API 端点可访问
+- [x] 返回格式正确（code: 200）
+- [x] 无 500 错误
+
+### 下一步
+
+- Phase 7: 服务层更新
+

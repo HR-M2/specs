@@ -133,42 +133,42 @@
 
 ---
 
-## Phase 5: Views 更新
+## Phase 5: Views 更新 ✅
 
-- [ ] 5.1 创建 Resume Views
+- [x] 5.1 创建 Resume Views
   - 文件: `apps/resume/views.py`
   - 合并原 LibraryView 和部分 ScreeningView 功能
-  - 实现: 列表、详情、上传、更新、删除
+  - 实现: 列表、详情、上传、更新、删除、分配、统计
   - _Requirements: 6.1_
 
-- [ ] 5.2 更新 Position Views
+- [x] 5.2 更新 Position Views
   - 文件: `apps/position_settings/views.py`
-  - 简历分配改为更新 resume.position_id
+  - 简历分配改为直接更新 Resume.position 外键
   - 删除 ResumePositionAssignment 相关逻辑
   - _Requirements: 2.1-2.4_
 
-- [ ] 5.3 更新 ScreeningTask Views
+- [x] 5.3 更新 ScreeningTask Views
   - 文件: `apps/resume_screening/views/`
-  - 适配新的简化模型
+  - 适配新的 ScreeningTask 和 Resume 模型
   - 任务创建时关联 Position
   - _Requirements: 6.1_
 
-- [ ] 5.4 更新 VideoAnalysis Views
+- [x] 5.4 更新 VideoAnalysis Views
   - 文件: `apps/video_analysis/views.py`
   - 创建时关联 Resume
   - 返回数据从 Resume 获取候选人信息
   - _Requirements: 6.1_
 
-- [ ] 5.5 更新 InterviewSession Views
+- [x] 5.5 更新 InterviewSession Views
   - 文件: `apps/interview_assist/views.py`
-  - 适配新模型
+  - 适配新模型 InterviewSession
   - 从 resume.position 获取岗位配置
   - _Requirements: 6.1_
 
-- [ ] 5.6 更新 ComprehensiveAnalysis Views
+- [x] 5.6 更新 ComprehensiveAnalysis Views
   - 文件: `apps/final_recommend/views.py`
-  - 删除废弃任务相关视图
-  - 适配新模型
+  - 适配新模型 ComprehensiveAnalysis
+  - 更新简历状态为已分析
   - _Requirements: 3.1, 6.1_
 
 ---

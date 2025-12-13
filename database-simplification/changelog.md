@@ -429,3 +429,113 @@ python manage.py check
 
 - Phase 5: Views 更新
 
+---
+
+## 2024-12-13 - Phase 5: Views 更新 ✅
+
+### 5.1 创建 Resume Views ✅
+
+**文件:** `apps/resume/views.py`（新建）
+
+**创建的视图类:**
+- `ResumeListView` - 简历列表（GET/POST）
+  - GET: 支持 position_id, status, candidate_name, is_assigned 过滤
+  - POST: 批量上传简历
+- `ResumeDetailView` - 简历详情（GET/PUT/DELETE）
+- `ResumeBatchDeleteView` - 批量删除
+- `ResumeCheckHashView` - 检查哈希（上传前去重）
+- `ResumeAssignView` - 分配/取消分配岗位
+- `ResumeScreeningResultView` - 筛选结果管理
+- `ResumeStatsView` - 简历统计数据
+
+### 5.2 更新 Position Views ✅
+
+**文件:** `apps/position_settings/views.py`
+
+**变更:**
+- 导入改为 `Position` 模型（原 `PositionCriteria`）
+- `PositionCriteriaListView`: 获取简历改为通过 `position.resumes.all()` 外键关联
+- `PositionCriteriaDetailView`: 获取简历数据适配新的 Resume 模型字段
+- `PositionAssignResumesView`: 分配逻辑改为直接更新 `Resume.position` 外键
+- `PositionRemoveResumeView`: 移除逻辑改为将 `Resume.position` 设为 None
+- 删除所有对 `ResumePositionAssignment` 中间表的引用
+
+### 5.3 更新 ScreeningTask Views ✅
+
+**文件:** `apps/resume_screening/views/`
+
+**screening.py 变更:**
+- 导入改为 `ScreeningTask`, `Resume`, `Position` 模型
+- `ResumeScreeningView`:
+  - 任务创建关联 `Position` 外键（替代 position_data JSON）
+  - 简历存储直接创建 `Resume` 对象
+  - 筛选结果保存到 `Resume.screening_result`
+- `ScreeningTaskStatusView`:
+  - 适配新的 `ScreeningTask` 字段 (`processed_count`, `total_count`)
+  - 简历数据从 `Position` 关联获取
+
+**task.py 变更:**
+- `TaskHistoryView`: 适配新模型字段和关联
+- `TaskDeleteView`: 使用 `ScreeningTask` 模型
+
+**resume_data.py 变更:**
+- `ResumeDataDetailView`: 改用 `Resume` 模型
+
+### 5.4 更新 VideoAnalysis Views ✅
+
+**文件:** `apps/video_analysis/views.py`
+
+**变更:**
+- 添加 `Resume` 模型导入
+- `VideoAnalysisView`:
+  - 必须提供 `resume_id` 关联简历
+  - 候选人信息从 `Resume` 获取
+  - 删除独立的 `candidate_name`, `position_applied` 参数
+- `VideoAnalysisStatusView`: 从 `resume` 关联获取候选人信息
+- `VideoAnalysisUpdateView`: 返回 `resume_id`
+- `VideoAnalysisListView`: 列表数据从关联 `Resume` 获取
+
+### 5.5 更新 InterviewSession Views ✅
+
+**文件:** `apps/interview_assist/views.py`
+
+**变更:**
+- 导入改为 `InterviewSession` 和 `Resume` 模型
+- `SessionListView`:
+  - 查询改为 `resume_id` 过滤
+  - 创建会话时从 `resume.position` 获取岗位配置
+  - 创建后更新简历状态为 `INTERVIEWING`
+- `SessionDetailView`: 从 `resume.position` 获取岗位信息
+- `GenerateQuestionsView`: 岗位配置从 `resume.position` 获取
+- `RecordQAView`: 问答记录直接操作 `qa_records` JSON
+- `GenerateReportView`: 
+  - 报告保存到 `final_report` JSON
+  - 删除文件生成逻辑（简化）
+
+### 5.6 更新 ComprehensiveAnalysis Views ✅
+
+**文件:** `apps/final_recommend/views.py`
+
+**变更:**
+- 导入改为 `ComprehensiveAnalysis`, `Resume`, `InterviewSession` 模型
+- `RecommendStatsView`: 统计改为按 `resume_id` 去重
+- `CandidateComprehensiveAnalysisView`:
+  - GET: 从 `Resume` 获取候选人信息，返回 `recommendation` JSON
+  - POST: 
+    - 筛选结果从 `Resume.screening_result` 获取
+    - 面试记录从 `InterviewSession` 获取
+    - 岗位配置从 `resume.position` 获取
+    - 分析完成后更新简历状态为 `ANALYZED`
+
+### 验证结果
+
+所有视图已更新以适配新的简化数据模型：
+- 6个模块的视图全部完成更新
+- 删除了对废弃模型的所有引用
+- 简历分配改为直接外键关联
+- 岗位配置统一从 `resume.position` 获取
+
+### 下一步
+
+- Phase 6: URL 路由更新
+

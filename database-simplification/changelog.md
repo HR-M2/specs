@@ -610,3 +610,110 @@ path('api/library/', include(('apps.resume.urls', 'resume_library'))),  # 兼容
 
 - Phase 7: 服务层更新
 
+---
+
+## 2024-12-14 - Phase 7: 服务层更新 ✅
+
+### 7.1 创建 Resume 服务层 ✅
+
+**文件:** `apps/resume/services.py`（新建）
+
+**创建的服务类:**
+
+1. **ResumeService** - 简历管理服务
+   - `get_resume_by_id()` - 根据ID获取简历
+   - `get_resume_by_hash()` - 根据哈希获取简历
+   - `create_resume()` - 创建或获取已存在的简历
+   - `update_status()` - 更新简历状态
+   - `set_screening_result()` - 设置筛选结果
+   - `assign_to_position()` - 分配到岗位
+   - `unassign_position()` - 取消岗位分配
+   - `batch_assign_to_position()` - 批量分配到岗位
+   - `get_statistics()` - 获取统计数据
+
+2. **ResumeStatusTransition** - 状态转换管理器
+   - `can_transition()` - 检查状态转换是否有效
+   - `transition_to_screened()` - 转换到已筛选状态
+   - `transition_to_interviewing()` - 转换到面试中状态
+   - `transition_to_analyzed()` - 转换到已分析状态
+
+**状态转换路径:**
+```
+pending -> screened -> interviewing -> analyzed
+    ↓         ↓            ↓             ↓
+    └─────────┴────────────┴─────────────┘
+              (可回退到前一状态)
+```
+
+### 7.2 更新 Screening 服务层 ✅
+
+**文件:** `apps/resume_screening/services/`
+
+**变更:**
+
+1. **screening_service.py:**
+   - 添加文档注释说明 Phase 7 变更
+   - 在筛选结果中保留原始文件名用于创建 Resume
+
+2. **report_service.py:**
+   - 删除 `save_report_to_model()` 方法（使用废弃的 ScreeningReport 模型）
+   - 新增 `save_report_to_resume()` - 将筛选报告保存到 Resume 模型
+   - 重构 `save_or_update_resume()` - 使用新的 Resume 模型替代 ResumeData
+   - 更新 `save_resume_data()` - 兼容旧接口，委托给新方法
+
+### 7.3 更新 Interview 服务层 ✅
+
+**文件:** `apps/interview_assist/services.py`（新建）
+
+**创建的服务类:**
+
+**InterviewSessionService** - 面试会话服务
+- `get_session_by_id()` - 获取会话详情
+- `create_session()` - 创建会话并更新简历状态为 INTERVIEWING
+- `get_sessions_by_resume()` - 获取简历的所有会话
+- `add_qa_record()` - 添加问答记录
+- `set_final_report()` - 设置最终报告
+- `get_job_config()` - 获取岗位配置
+- `delete_session()` - 删除会话
+
+**更新文件:** `apps/interview_assist/services/__init__.py`
+- 导出 `InterviewSessionService`
+
+### 7.4 更新 Recommend 服务层 ✅
+
+**文件:** `apps/final_recommend/services.py`
+
+**新增服务类:**
+
+**ComprehensiveAnalysisService** - 综合分析服务
+- `get_analysis_by_id()` - 获取分析记录
+- `get_latest_by_resume()` - 获取简历的最新分析
+- `create_analysis()` - 创建分析记录并更新简历状态为 ANALYZED
+- `get_statistics()` - 获取统计数据
+
+### 验证结果
+
+```bash
+python manage.py check
+# System check identified 1 issue (0 silenced)
+# WARNINGS: URL namespace 'resume' isn't unique (兼容路由导致，不影响功能)
+```
+
+### 服务层调用关系
+
+```
+Resume Services (核心)
+    ↑
+    ├── Screening Services (筛选完成 -> SCREENED)
+    ├── Interview Services (创建会话 -> INTERVIEWING)
+    └── Recommend Services (分析完成 -> ANALYZED)
+```
+
+### 补充
+
+在 tasks.md 的 Phase 9 中新增任务 **9.5 删除兼容路由**，用于在前端适配完成后删除 `/api/library/` 兼容路由，消除 URL namespace 警告。
+
+### 下一步
+
+- Phase 8: 废弃代码清理
+

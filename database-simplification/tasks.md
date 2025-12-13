@@ -194,25 +194,25 @@
 
 ---
 
-## Phase 7: 服务层更新
+## Phase 7: 服务层更新 ✅
 
-- [ ] 7.1 创建 Resume 服务层
+- [x] 7.1 创建 Resume 服务层
   - 文件: `apps/resume/services.py`
   - 实现简历状态转换逻辑
   - 实现筛选结果更新逻辑
   - _Requirements: 5.1-5.4_
 
-- [ ] 7.2 更新 Screening 服务层
+- [x] 7.2 更新 Screening 服务层
   - 文件: `apps/resume_screening/services/`
   - 任务完成时更新 Resume 状态和结果
   - _Requirements: 5.2_
 
-- [ ] 7.3 更新 Interview 服务层
+- [x] 7.3 更新 Interview 服务层
   - 文件: `apps/interview_assist/services.py`
   - 创建会话时更新 Resume 状态
   - _Requirements: 5.3_
 
-- [ ] 7.4 更新 Recommend 服务层
+- [x] 7.4 更新 Recommend 服务层
   - 文件: `apps/final_recommend/services.py`
   - 分析完成时更新 Resume 状态
   - _Requirements: 5.4_
@@ -264,6 +264,12 @@
 - [ ] 9.4 验证前端编译
   - 运行 `npm run build`
   - 确保无 TypeScript 错误
+  - _Requirements: 6.1_
+
+- [ ] 9.5 删除兼容路由
+  - 文件: `config/urls.py`
+  - 删除 `/api/library/` 兼容路由（前端已迁移到 `/api/resumes/`）
+  - 消除 URL namespace 警告
   - _Requirements: 6.1_
 
 ---

@@ -313,3 +313,119 @@ python manage.py migrate
 
 - Phase 4: Serializers 更新
 
+---
+
+## 2024-12-13 - Phase 4: Serializers 更新 ✅
+
+### 4.1 创建 Resume Serializers ✅
+
+**文件:** `apps/resume/serializers.py`（新建）
+
+**创建的序列化器:**
+- `ResumeListSerializer` - 简历列表（精简版）
+- `ResumeDetailSerializer` - 简历详情（完整版）
+- `ResumeCreateSerializer` - 简历创建
+- `ResumeUpdateSerializer` - 简历更新
+- `ResumeUploadSerializer` - 批量上传
+- `BatchDeleteSerializer` - 批量删除
+- `CheckHashSerializer` - 哈希检查
+- `ResumeAssignSerializer` - 岗位分配
+
+**兼容性处理:**
+- 添加 `is_screened`, `is_assigned` 计算字段（兼容旧API）
+- 添加 `screening_score`, `screening_summary` 从 JSON 展开
+- 添加 `ResumeLibrarySerializer` 别名
+
+### 4.2 创建 Position Serializers ✅
+
+**文件:** `apps/position_settings/serializers.py`（新建）
+
+**创建的序列化器:**
+- `PositionListSerializer` - 岗位列表
+- `PositionDetailSerializer` - 岗位详情
+- `PositionCreateSerializer` - 岗位创建（支持旧格式）
+- `PositionUpdateSerializer` - 岗位更新
+- `ResumeAssignmentSerializer` - 简历分配
+
+**兼容性处理:**
+- `requirements` JSON 展开为独立字段：`required_skills`, `optional_skills`, `min_experience`, `education`, `certifications`, `salary_range`, `salary_min`, `salary_max`, `project_requirements`
+- 支持旧API字段名 `position` -> `title`
+- 创建/更新时自动合并展开字段到 `requirements` JSON
+
+### 4.3 更新 ScreeningTask Serializers ✅
+
+**文件:** `apps/resume_screening/serializers.py`
+
+**变更:**
+- 删除 `ScreeningReportSerializer`（模型已删除）
+- 删除 `ResumeDataSerializer`（模型已删除）
+- 重构 `ScreeningTaskSerializer` 适配新模型
+- 新增 `ScreeningTaskListSerializer`, `ScreeningTaskCreateSerializer`
+
+**兼容性处理:**
+- `position_data` 从 `position` 外键动态获取
+- `current_step`, `total_steps` 映射到 `processed_count`, `total_count`
+- 保留 `ResumeScreeningTaskSerializer` 别名
+
+### 4.4 创建 VideoAnalysis Serializers ✅
+
+**文件:** `apps/video_analysis/serializers.py`（新建）
+
+**创建的序列化器:**
+- `VideoAnalysisSerializer` - 完整版
+- `VideoAnalysisListSerializer` - 列表版
+- `VideoAnalysisCreateSerializer` - 创建
+- `VideoAnalysisUpdateSerializer` - 更新
+- `VideoAnalysisResultSerializer` - 分析结果输入
+
+**兼容性处理:**
+- `candidate_name`, `position_applied` 从 `resume` 关联获取
+- `analysis_result` JSON 展开为 `personality`, `fraud_score`, `confidence_score`, `summary`
+- 支持旧格式独立人格分数字段自动合并
+
+### 4.5 创建 InterviewSession Serializers ✅
+
+**文件:** `apps/interview_assist/serializers.py`（新建）
+
+**创建的序列化器:**
+- `InterviewSessionSerializer` - 完整版
+- `InterviewSessionListSerializer` - 列表版
+- `InterviewSessionCreateSerializer` - 创建
+- `QARecordSerializer` - 问答记录
+- `AddQARecordSerializer` - 添加问答
+- `FinalReportSerializer` - 最终报告
+- `SetFinalReportSerializer` - 设置报告
+
+**兼容性处理:**
+- `job_config` 从 `resume.position` 动态获取
+- `resume_data` -> `resume` 字段映射
+- 保留 `InterviewAssistSessionSerializer` 别名
+
+### 4.6 创建 ComprehensiveAnalysis Serializers ✅
+
+**文件:** `apps/final_recommend/serializers.py`（新建）
+
+**创建的序列化器:**
+- `ComprehensiveAnalysisSerializer` - 完整版
+- `ComprehensiveAnalysisListSerializer` - 列表版
+- `ComprehensiveAnalysisCreateSerializer` - 创建
+- `ComprehensiveAnalysisUpdateSerializer` - 更新
+- `RecommendationInputSerializer` - 分析输入
+
+**兼容性处理:**
+- `recommendation` JSON 展开为 `recommendation_level`, `recommendation_label`, `recommendation_action`
+- `comprehensive_report` -> `report` 字段映射
+- `resume_data` -> `resume` 字段映射
+- 保留 `CandidateComprehensiveAnalysisSerializer` 别名
+
+### 验证结果
+
+```bash
+python manage.py check
+# System check identified no issues (0 silenced)
+```
+
+### 下一步
+
+- Phase 5: Views 更新
+

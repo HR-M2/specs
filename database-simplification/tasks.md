@@ -95,37 +95,37 @@
 
 ---
 
-## Phase 4: Serializers 更新
+## Phase 4: Serializers 更新 ✅
 
-- [ ] 4.1 创建 Resume Serializers
+- [x] 4.1 创建 Resume Serializers
   - 文件: `apps/resume/serializers.py`
   - 定义 ResumeListSerializer, ResumeDetailSerializer
   - 兼容原 ResumeLibrary 和 ResumeData 的响应格式
   - _Requirements: 6.2_
 
-- [ ] 4.2 更新 Position Serializers
+- [x] 4.2 更新 Position Serializers
   - 文件: `apps/position_settings/serializers.py`
   - 适配新的 Position 模型结构
   - 处理 requirements JSON 的序列化
   - _Requirements: 6.2_
 
-- [ ] 4.3 更新 ScreeningTask Serializers
+- [x] 4.3 更新 ScreeningTask Serializers
   - 文件: `apps/resume_screening/serializers.py`
   - 适配新的简化模型
   - _Requirements: 6.2_
 
-- [ ] 4.4 更新 VideoAnalysis Serializers
+- [x] 4.4 更新 VideoAnalysis Serializers
   - 文件: `apps/video_analysis/serializers.py`
   - 处理 analysis_result JSON 的序列化
   - 从 resume 关联获取 candidate_name
   - _Requirements: 6.2_
 
-- [ ] 4.5 更新 InterviewSession Serializers
+- [x] 4.5 更新 InterviewSession Serializers
   - 文件: `apps/interview_assist/serializers.py`
   - 适配新模型名称和字段
   - _Requirements: 6.2_
 
-- [ ] 4.6 更新 ComprehensiveAnalysis Serializers
+- [x] 4.6 更新 ComprehensiveAnalysis Serializers
   - 文件: `apps/final_recommend/serializers.py`
   - 处理 recommendation JSON 的序列化
   - 删除废弃模型的 serializer

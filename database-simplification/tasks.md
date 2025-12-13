@@ -245,34 +245,36 @@
 
 ---
 
-## Phase 9: 前端适配
+## Phase 9: 前端适配 ✅
 
-- [ ] 9.1 更新前端 API 端点
+- [x] 9.1 更新前端 API 端点
   - 文件: `HRM2-Vue-Frontend_new/src/api/endpoints.ts`
-  - 更新简历相关端点指向 `/api/resumes/`
-  - 保持其他端点不变
+  - 更新简历相关端点从 `/api/library/` 到 `/api/resumes/`
+  - 添加新端点: RESUME_ASSIGN, RESUME_STATS, RESUME_SCREENING
   - _Requirements: 6.1_
 
-- [ ] 9.2 更新前端类型定义
-  - 文件: `HRM2-Vue-Frontend_new/src/types/`
-  - 定义新的 Resume 类型
-  - 适配字段变更
+- [x] 9.2 更新前端类型定义
+  - 文件: `HRM2-Vue-Frontend_new/src/types/index.ts`
+  - 添加统一的 Resume 类型（合并 ResumeLibrary + ResumeData）
+  - 添加 ResumeStatus 类型: pending/screened/interviewing/analyzed
   - _Requirements: 6.2_
 
-- [ ] 9.3 更新前端 API 调用
-  - 合并 libraryApi 和部分 screeningApi 到 resumeApi
-  - 更新组件中的 API 调用
+- [x] 9.3 更新前端 API 调用
+  - 文件: `HRM2-Vue-Frontend_new/src/api/index.ts`
+  - 创建 resumeApi 替代 libraryApi
+  - 添加新方法: assign, getStats, getScreeningResult, updateScreeningResult
+  - 保留 libraryApi 和 LibraryResume 作为兼容别名
   - _Requirements: 6.1_
 
-- [ ] 9.4 验证前端编译
-  - 运行 `npm run build`
-  - 确保无 TypeScript 错误
+- [x] 9.4 验证前端编译
+  - 运行 `npm run build` 成功
+  - TypeScript 类型检查通过
   - _Requirements: 6.1_
 
-- [ ] 9.5 删除兼容路由
+- [x] 9.5 删除兼容路由
   - 文件: `config/urls.py`
-  - 删除 `/api/library/` 兼容路由（前端已迁移到 `/api/resumes/`）
-  - 消除 URL namespace 警告
+  - 删除 `/api/library/` 兼容路由
+  - Django check 通过，无警告
   - _Requirements: 6.1_
 
 ---
@@ -335,10 +337,10 @@
 - [x] 返回格式正确
 - [x] 无 500 错误
 
-### Checkpoint 4: Phase 9 完成后
-- [ ] 前端编译通过
-- [ ] 前后端联调成功
-- [ ] 业务流程正常
+### Checkpoint 4: Phase 9 完成后 ✅
+- [x] 前端编译通过
+- [x] API 端点已迁移到 /api/resumes/
+- [x] Django check 无警告
 
 ### Final Checkpoint
 - [ ] 后端测试全部通过

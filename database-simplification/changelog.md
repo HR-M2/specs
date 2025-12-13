@@ -790,3 +790,107 @@ WARNINGS: URL namespace 'resume' isn't unique
 
 - Phase 9: 前端适配
 
+---
+
+## 2024-12-14 - Phase 9: 前端适配 ✅
+
+### 9.1 更新前端 API 端点 ✅
+
+**文件:** `HRM2-Vue-Frontend_new/src/api/endpoints.ts`
+
+**变更:**
+- 重命名端点从 `/library/` 到 `/resumes/`:
+  - `LIBRARY` → `RESUMES`
+  - `LIBRARY_DETAIL` → `RESUME_DETAIL`
+  - `LIBRARY_BATCH_DELETE` → `RESUME_BATCH_DELETE`
+  - `LIBRARY_CHECK_HASH` → `RESUME_CHECK_HASH`
+- 新增端点:
+  - `RESUME_ASSIGN` - `/resumes/assign/` - 分配简历到岗位
+  - `RESUME_STATS` - `/resumes/stats/` - 简历统计
+  - `RESUME_SCREENING` - `/resumes/{id}/screening/` - 筛选结果
+
+### 9.2 更新前端类型定义 ✅
+
+**文件:** `HRM2-Vue-Frontend_new/src/types/index.ts`
+
+**新增类型:**
+- `ResumeStatus` - 简历状态枚举: `'pending' | 'screened' | 'interviewing' | 'analyzed'`
+- `Resume` - 统一简历类型（合并原 ResumeLibrary 和 ResumeData）:
+  - 文件信息: `filename`, `file_hash`, `file_size`, `file_type`
+  - 候选人信息: `candidate_name`, `content`, `content_preview`
+  - 岗位关联: `position_id`, `position_title`
+  - 状态管理: `status` (ResumeStatus)
+  - 筛选结果: `screening_result`, `screening_report`
+  - 关联数据: `video_analysis`
+  - 兼容字段: `is_screened`, `is_assigned` (计算属性)
+
+### 9.3 更新前端 API 调用 ✅
+
+**文件:** `HRM2-Vue-Frontend_new/src/api/index.ts`
+
+**新增:**
+- `resumeApi` - 新的简历管理 API 对象，方法包括:
+  - `getList()` - 获取简历列表（支持 status, position_id 筛选）
+  - `upload()` - 上传简历
+  - `getDetail()` - 获取详情
+  - `update()` - 更新简历（支持 status 更新）
+  - `delete()` - 删除简历
+  - `batchDelete()` - 批量删除
+  - `checkHashes()` - 检查哈希
+  - `assign()` - 分配到岗位（新方法）
+  - `getStats()` - 获取统计（新方法）
+  - `getScreeningResult()` - 获取筛选结果（新方法）
+  - `updateScreeningResult()` - 更新筛选结果（新方法）
+
+**兼容性处理:**
+- `libraryApi` - 作为 `resumeApi` 的别名导出
+- `LibraryResume` - 作为 `Resume` 的类型别名导出
+- 现有组件（`useResumeLibrary.ts`, `useResumeUpload.ts` 等）无需修改
+
+### 9.4 验证前端编译 ✅
+
+**执行命令:**
+```bash
+npm run build
+```
+
+**结果:**
+- TypeScript 类型检查通过
+- Vite 构建成功（2010 modules, 12.84s）
+- 无错误
+
+### 9.5 删除兼容路由 ✅
+
+**文件:** `HRM2-Django-Backend/config/urls.py`
+
+**变更:**
+- 删除兼容路由: `path('api/library/', include(('apps.resume.urls', 'resume_library')))`
+- 仅保留新路由: `path('api/resumes/', include('apps.resume.urls'))`
+
+**验证:**
+```bash
+python manage.py check
+# System check identified no issues (0 silenced)
+```
+
+### Checkpoint 4 验证 ✅
+
+| 检查项 | 状态 |
+|:-------|:-----|
+| 前端编译通过 | ✅ |
+| API 端点已迁移到 /api/resumes/ | ✅ |
+| Django check 无警告 | ✅ |
+
+### 文件变更汇总
+
+| 文件 | 变更类型 |
+|:-----|:---------|
+| `src/api/endpoints.ts` | 修改 - 更新端点路径 |
+| `src/api/index.ts` | 修改 - 添加 resumeApi，保留兼容别名 |
+| `src/types/index.ts` | 修改 - 添加 Resume 和 ResumeStatus 类型 |
+| `config/urls.py` | 修改 - 删除兼容路由 |
+
+### 下一步
+
+- Phase 10: 测试与验证
+

@@ -9,24 +9,24 @@
 
 ---
 
-## Phase 1: 基础设施准备
+## Phase 1: 基础设施准备 ✅
 
-- [ ] 1.1 创建新的 resume Django 应用
+- [x] 1.1 创建新的 resume Django 应用
   - 在 `apps/` 目录下运行 `python manage.py startapp resume`
   - 配置 `apps.py` 设置 `name = 'apps.resume'`
   - 注册到 `config/settings/base.py` 的 `INSTALLED_APPS`
   - _Requirements: 1.1_
 
-- [ ] 1.2 备份现有数据库（可选）
+- [x] 1.2 备份现有数据库（可选）
   - 导出 SQLite 数据库备份
   - 记录当前表结构
   - _Requirements: 7.1_
 
 ---
 
-## Phase 2: 新模型定义
+## Phase 2: 新模型定义 ✅
 
-- [ ] 2.1 重构 Position 模型
+- [x] 2.1 重构 Position 模型
   - 文件: `apps/position_settings/models.py`
   - 重命名 `PositionCriteria` 为 `Position`
   - 合并技能、学历等字段到 `requirements` JSON
@@ -34,28 +34,28 @@
   - 删除 `ResumePositionAssignment` 中间表
   - _Requirements: 4.1, 2.1_
 
-- [ ] 2.2 创建统一的 Resume 模型
+- [x] 2.2 创建统一的 Resume 模型
   - 文件: `apps/resume/models.py`
   - 定义 Resume 模型（合并 ResumeLibrary + ResumeData）
   - 包含: 文件信息、候选人信息、岗位外键、状态、筛选结果
   - 添加 Status 枚举: pending/screened/interviewing/analyzed
   - _Requirements: 1.1, 1.2, 5.1-5.5_
 
-- [ ] 2.3 简化 ScreeningTask 模型
+- [x] 2.3 简化 ScreeningTask 模型
   - 文件: `apps/resume_screening/models.py`
   - 创建新的 `ScreeningTask` 模型（简化版）
   - 关联到 Position 而非存储 position_data
   - 删除 current_step, total_steps, current_speaker 字段
   - _Requirements: 4.1_
 
-- [ ] 2.4 简化 VideoAnalysis 模型
+- [x] 2.4 简化 VideoAnalysis 模型
   - 文件: `apps/video_analysis/models.py`
   - 关联到 Resume（原 ResumeData）
   - 合并评分字段到 `analysis_result` JSON
   - 删除 candidate_name, position_applied（从关联获取）
   - _Requirements: 4.2_
 
-- [ ] 2.5 简化 InterviewSession 模型
+- [x] 2.5 简化 InterviewSession 模型
   - 文件: `apps/interview_assist/models.py`
   - 重命名 `InterviewAssistSession` 为 `InterviewSession`
   - 关联到新的 Resume 模型
@@ -63,7 +63,7 @@
   - 删除 report_file（报告存JSON）
   - _Requirements: 4.1_
 
-- [ ] 2.6 简化 ComprehensiveAnalysis 模型
+- [x] 2.6 简化 ComprehensiveAnalysis 模型
   - 文件: `apps/final_recommend/models.py`
   - 重命名 `CandidateComprehensiveAnalysis` 为 `ComprehensiveAnalysis`
   - 合并 recommendation_level/label/action 到 `recommendation` JSON

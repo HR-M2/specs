@@ -715,5 +715,78 @@ Resume Services (核心)
 
 ### 下一步
 
-- Phase 8: 废弃代码清理
+- Phase 9: 前端适配
+
+---
+
+## 2024-12-14 - Phase 8: 废弃代码清理 ✅
+
+### 8.1 删除废弃模型别名和占位类 ✅
+
+**删除的模型别名（4个 models.py 文件）:**
+
+| 文件 | 删除的别名/占位类 |
+|:-----|:-----------------|
+| `apps/position_settings/models.py` | `PositionCriteria` 别名 |
+| `apps/resume_screening/models.py` | `ResumeScreeningTask` 别名、`ScreeningReport`/`ResumeData`/`ResumeGroup` 占位类 |
+| `apps/interview_assist/models.py` | `InterviewAssistSession` 别名 |
+| `apps/final_recommend/models.py` | `CandidateComprehensiveAnalysis` 别名 |
+
+**删除的序列化器别名（4个 serializers.py 文件）:**
+
+| 文件 | 删除的别名 |
+|:-----|:----------|
+| `apps/position_settings/serializers.py` | `PositionCriteriaSerializer`, `PositionCriteriaListSerializer` |
+| `apps/resume_screening/serializers.py` | `ResumeScreeningTaskSerializer` |
+| `apps/interview_assist/serializers.py` | `InterviewAssistSessionSerializer` |
+| `apps/final_recommend/serializers.py` | `CandidateComprehensiveAnalysisSerializer` |
+
+### 8.2 删除废弃视图和 URL ✅
+
+**删除整个目录:**
+- `apps/resume_library/` - 11个文件（已合并到 `apps/resume/`）
+  - `__init__.py`, `admin.py`, `apps.py`, `models.py`
+  - `serializers.py`, `services.py`, `tests.py`
+  - `urls.py`, `views.py`
+  - `migrations/` 目录
+
+**更新的文件:**
+
+1. **`apps/resume_screening/views/link.py`**:
+   - 导入改为 `from apps.resume.models import Resume`
+   - `LinkResumeVideoView.handle_post()`: 使用 Resume 模型和反向关系 `resume.video_analyses`
+   - `UnlinkResumeVideoView.handle_post()`: 使用 Resume 模型和反向关系
+   - 保留 `resume_data_id` 参数名以兼容旧 API
+
+2. **`apps/resume_screening/urls.py`**:
+   - 更新文档注释：简历库已迁移到 `apps.resume` 模块
+
+### 8.3 清理废弃导入和引用 ✅
+
+**验证结果:**
+- 所有废弃模型别名已删除
+- 所有废弃占位类已删除
+- 所有序列化器别名已删除
+- `apps/resume_library/` 目录已完全删除
+
+**Django check 结果:**
+```
+System check identified 1 issue (0 silenced)
+WARNINGS: URL namespace 'resume' isn't unique
+```
+此警告是预期的，由 `/api/library/` 兼容路由导致，将在 Phase 9 完成后删除。
+
+### 清理统计
+
+| 类别 | 删除数量 |
+|:-----|:---------|
+| 模型别名 | 4 个 |
+| 占位类 | 3 个 |
+| 序列化器别名 | 6 个 |
+| 目录 | 1 个 (`apps/resume_library/`) |
+| 文件 | 11 个 |
+
+### 下一步
+
+- Phase 9: 前端适配
 

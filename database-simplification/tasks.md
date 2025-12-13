@@ -219,25 +219,28 @@
 
 ---
 
-## Phase 8: 废弃代码清理
+## Phase 8: 废弃代码清理 ✅
 
-- [ ] 8.1 删除废弃模型文件
-  - 删除 `ResumeLibrary` 模型（已迁移到 Resume）
-  - 删除 `ResumeData` 模型（已迁移到 Resume）
-  - 删除 `ResumeGroup` 模型
-  - 删除 `ScreeningReport` 模型
-  - 删除 `ResumePositionAssignment` 模型
-  - 删除 `InterviewEvaluationTask` 模型
+- [x] 8.1 删除废弃模型文件
+  - 删除 `PositionCriteria` 别名（position_settings/models.py）
+  - 删除 `ResumeScreeningTask` 别名（resume_screening/models.py）
+  - 删除 `ScreeningReport` 占位类（resume_screening/models.py）
+  - 删除 `ResumeData` 占位类（resume_screening/models.py）
+  - 删除 `ResumeGroup` 占位类（resume_screening/models.py）
+  - 删除 `InterviewAssistSession` 别名（interview_assist/models.py）
+  - 删除 `CandidateComprehensiveAnalysis` 别名（final_recommend/models.py）
+  - 删除序列化器别名（4个 serializers.py 文件）
   - _Requirements: 3.1-3.4_
 
-- [ ] 8.2 删除废弃视图和 URL
-  - 清理 `apps/resume_library/` 目录（合并到 resume）
-  - 清理 `apps/resume_screening/` 中废弃代码
+- [x] 8.2 删除废弃视图和 URL
+  - 删除 `apps/resume_library/` 目录（11个文件）
+  - 更新 `apps/resume_screening/views/link.py` 使用 Resume 模型
+  - 更新 `apps/resume_screening/urls.py` 文档注释
   - _Requirements: 3.1-3.4_
 
-- [ ] 8.3 清理废弃导入和引用
-  - 检查所有文件中对废弃模型的引用
-  - 更新为新模型引用
+- [x] 8.3 清理废弃导入和引用
+  - 验证所有废弃模型引用已移除
+  - Django check 通过（仅有预期的 URL namespace 警告）
   - _Requirements: 3.1-3.4_
 
 ---

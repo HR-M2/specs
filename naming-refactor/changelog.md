@@ -127,6 +127,26 @@
 
 ---
 
+## [Task 1.4 阶段三] - 2024-12-14
+
+### 后端 resume_data_id 兼容代码清理
+
+**变更文件**:
+- `apps/interview_assist/views.py` - 移除 resume_data_id 兼容
+- `apps/video_analysis/views.py` - 移除 resume_data_id 兼容和 OpenAPI 更新
+- `apps/resume_screening/views/link.py` - 参数名和响应字段更新
+- `apps/position_settings/views.py` - 移除 resume_data_ids 兼容
+- `apps/common/schemas.py` - 更新所有 resume_data_id 字段为 resume_id
+- `Docs/API参考文档.md` - 更新文档
+- `Docs/openapi.json` - 重新生成
+
+**变更内容**:
+- 所有 `resume_data_id` 参数统一为 `resume_id`
+- 所有 `resume_data_ids` 参数统一为 `resume_ids`
+- API 响应中的 `resume_data_id` 字段统一为 `resume_id`
+
+---
+
 ## 待完成
 
 ### Phase 3 - 低优先级（待执行）

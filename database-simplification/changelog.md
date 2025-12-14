@@ -972,6 +972,18 @@ OK
 - 失败: 0
 - 错误: 0
 
+### 10.4 手动测试后各项修复
+
+- 简历库列表不显示：前端 `resumeApi.getList()` 解析字段从 `items` 调整为 `resumes`
+- 统一哈希算法为 SHA256：删除 `generate_md5()`，将 `screening.py` 和 `resume/views.py` 中的 `hashlib.md5()` 改为 `generate_hash()`
+- 修复简历重复问题：`dev_tools_service.py` 原使用 `SHA256(name+content+random)` 导致与 `generate_hash(content)` 不一致，现已统一
+- 修复 dev_tools 生成简历无 Position 关联：创建 Resume 时关联 Position，解决任务历史无法显示候选人、加入组失败等问题
+- 修复筛选分数显示：后端返回完整 `screening_score` 对象（`hr_score`, `technical_score`, `manager_score`, `comprehensive_score`），涉及 `screening.py`, `task.py`, `position_settings/views.py`, `interview_assist/views.py`
+- 修复任务-简历重复问题：`ScreeningTask` 添加 `resumes` ManyToMany 字段，`_get_resume_data` 改为 `task.resumes.all()` 查询，解决仪表盘数字错误和任务历史重复显示
+- 修复"已完成面试"统计：`ResumeStatsView` 添加 `interview_completed` 字段，前端改用 stats API 获取面试完成数
+- 修复简历库"标识"不显示：前端 `row.file_hash` 改为 `row.file_hash_short`（后端返回字段名）
+- 修复 API 文档 "other" 标签：`生成API文档.py` 路径映射 `/api/library/` 改为 `/api/resumes/`
+
 ### Checkpoint 5 验证 ✅
 
 | 检查项 | 状态 |

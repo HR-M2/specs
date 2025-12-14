@@ -10,7 +10,7 @@
 
 ### Task 1.1: 后端视图类重命名
 
-**状态**: ⬜ 待执行
+**状态**: ✅ 已完成
 
 **目标**: 将岗位模块视图类名与 Position 模型保持一致
 
@@ -20,10 +20,10 @@
 
 **步骤**:
 
-- [ ] 1.1.1 修改 `views.py` 中 `PositionCriteriaListView` → `PositionListView`
-- [ ] 1.1.2 修改 `views.py` 中 `PositionCriteriaDetailView` → `PositionDetailView`
-- [ ] 1.1.3 修改 `urls.py` 中的导入语句
-- [ ] 1.1.4 修改 `urls.py` 中的视图引用
+- [x] 1.1.1 修改 `views.py` 中 `PositionCriteriaListView` → `PositionListView`
+- [x] 1.1.2 修改 `views.py` 中 `PositionCriteriaDetailView` → `PositionDetailView`
+- [x] 1.1.3 修改 `urls.py` 中的导入语句
+- [x] 1.1.4 修改 `urls.py` 中的视图引用
 - [ ] 1.1.5 运行后端服务验证无报错
 - [ ] 1.1.6 访问 `/api/positions/` 验证正常
 
@@ -39,7 +39,7 @@ python manage.py runserver
 
 ### Task 1.2: 前端 PositionData.position → title
 
-**状态**: ⬜ 待执行
+**状态**: ✅ 已完成
 
 **目标**: 将前端岗位类型字段与后端模型字段一致
 
@@ -55,10 +55,10 @@ python manage.py runserver
 
 **步骤**:
 
-- [ ] 1.2.1 修改 `types/index.ts` 中 `PositionData` 接口，`position` → `title`
-- [ ] 1.2.2 全局搜索 `.position` 并替换为 `.title`（仅岗位名称相关）
-- [ ] 1.2.3 修改组件中的模板绑定 `{{ item.position }}` → `{{ item.title }}`
-- [ ] 1.2.4 修改 API 请求构造中的字段名
+- [x] 1.2.1 修改 `types/index.ts` 中 `PositionData` 接口，`position` → `title`
+- [x] 1.2.2 全局搜索 `.position` 并替换为 `.title`（仅岗位名称相关）
+- [x] 1.2.3 修改组件中的模板绑定 `{{ item.position }}` → `{{ item.title }}`
+- [x] 1.2.4 修改 API 请求构造中的字段名
 - [ ] 1.2.5 运行 `npm run build` 验证无 TypeScript 错误
 - [ ] 1.2.6 测试岗位管理页面功能
 
@@ -78,7 +78,7 @@ npm run dev
 
 ### Task 1.3: 前端路由 /library → /resumes
 
-**状态**: ⬜ 待执行
+**状态**: ✅ 已完成
 
 **目标**: 统一前端路由与 API 路径命名
 
@@ -89,10 +89,10 @@ npm run dev
 
 **步骤**:
 
-- [ ] 1.3.1 重命名 `ResumeLibraryView.vue` → `ResumesView.vue`
-- [ ] 1.3.2 修改 `router/index.ts` 路由路径和组件导入
-- [ ] 1.3.3 添加 `/library` → `/resumes` 重定向
-- [ ] 1.3.4 修改 `AppSidebar.vue` 导航链接
+- [x] 1.3.1 重命名 `ResumeLibraryView.vue` → `ResumesView.vue`
+- [x] 1.3.2 修改 `router/index.ts` 路由路径和组件导入
+- [x] 1.3.3 添加 `/library` → `/resumes` 重定向
+- [x] 1.3.4 修改 `AppSidebar.vue` 导航链接
 - [ ] 1.3.5 全局搜索 `library` 路由引用并更新
 - [ ] 1.3.6 测试页面跳转和导航
 
@@ -105,7 +105,7 @@ npm run dev
 
 ### Task 1.4: API字段 resume_data_id → resume_id
 
-**状态**: ⬜ 待执行
+**状态**: ✅ 已完成
 
 **目标**: 统一简历ID字段命名
 
@@ -117,8 +117,8 @@ npm run dev
 - `apps/resume_screening/views.py`
 
 **步骤**:
-- [ ] 1.4.1 确认后端已支持 `resume_id` 参数（或添加兼容）
-- [ ] 1.4.2 运行后端验证兼容性
+- [x] 1.4.1 确认后端已支持 `resume_id` 参数（或添加兼容）
+- [x] 1.4.2 运行后端验证兼容性
 
 **阶段二：前端迁移**
 
@@ -129,9 +129,9 @@ npm run dev
 - `src/composables/useVideoUpload.ts`
 
 **步骤**:
-- [ ] 1.4.3 修改 `api/index.ts` 中所有 `resume_data_id` → `resume_id`
-- [ ] 1.4.4 修改 `types/index.ts` 中类型定义
-- [ ] 1.4.5 修改 composables 中的字段引用
+- [x] 1.4.3 修改 `api/index.ts` 中所有 `resume_data_id` → `resume_id`
+- [x] 1.4.4 修改 `types/index.ts` 中类型定义
+- [x] 1.4.5 修改 composables 中的字段引用
 - [ ] 1.4.6 运行前端验证无错误
 
 **阶段三：后端清理** (Phase 1 完成后执行)
@@ -257,10 +257,10 @@ npm run dev
 
 | 任务 | 状态 | 完成时间 |
 |:----|:----:|:-------:|
-| Task 1.1 视图类重命名 | ⬜ | - |
-| Task 1.2 PositionData 字段 | ⬜ | - |
-| Task 1.3 路由统一 | ⬜ | - |
-| Task 1.4 resume_id 统一 | ⬜ | - |
+| Task 1.1 视图类重命名 | ✅ | 2024-12-14 |
+| Task 1.2 PositionData 字段 | ✅ | 2024-12-14 |
+| Task 1.3 路由统一 | ✅ | 2024-12-14 |
+| Task 1.4 resume_id 统一 | ✅ | 2024-12-14 |
 
 ### Phase 2 进度
 

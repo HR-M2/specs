@@ -147,11 +147,37 @@
 
 ---
 
+## [Task 3.1] - 2024-12-14
+
+### 修复 OpenAPI 文档生成警告和错误
+
+**问题**: `python manage.py spectacular` 生成 OpenAPI 文档时存在 18 个 Warnings 和 2 个 Errors
+
+**变更文件**:
+- `apps/resume/serializers.py` - 为 `get_xxx` 方法添加 `@extend_schema_field` 装饰器和类型注释
+- `apps/resume_screening/views/screening.py` - 为 `ScreeningSubmitView` 添加 `request=ResumeScreeningInputSerializer`
+- `apps/final_recommend/views.py` - 为 `ComprehensiveAnalysisView` 添加 `request=None`
+- `apps/position_settings/views.py` - 为列表/详情视图添加 `operation_id`
+- `apps/resume/views.py` - 为列表/详情视图添加 `operation_id`
+- `apps/interview_assist/views.py` - 为列表/详情视图添加 `operation_id`
+
+**变更内容**:
+| 问题类型 | 变更数量 | 变更方式 |
+|:------|:------:|:--------|
+| Serializer 类型注释缺失 | 15 | 添加 `@extend_schema_field` 装饰器 |
+| 视图 request body 定义缺失 | 2 | 添加 `request` 参数到 `@extend_schema` |
+| operationId 重复 | 3 | 添加唯一 `operation_id` |
+
+**结果**: Warnings 18 → 0, Errors 2 → 0
+
+---
+
 ## 待完成
 
 ### Phase 3 - 低优先级（待执行）
-- [ ] Task 3.1: 后端移除 Position.to_dict() 兼容字段
-- [ ] Task 3.2: 前端类型 ResumeData → Resume 合并
+- [x] Task 3.1: 修复 OpenAPI 文档生成警告和错误
+- [ ] Task 3.2: 后端移除 Position.to_dict() 兼容字段
+- [ ] Task 3.3: 前端类型 ResumeData → Resume 合并
 
 ---
 

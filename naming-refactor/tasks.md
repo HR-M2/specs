@@ -218,23 +218,27 @@ npm run dev
 
 ### Task 3.1: 修复 OpenAPI 文档生成警告和错误
 
-**状态**: ⬜ 待执行
+**状态**: ✅ 已完成
 
 **问题描述**: `python manage.py spectacular` 生成 OpenAPI 文档时存在 18 个 Warnings 和 2 个 Errors
 
 **文件清单**:
 - `apps/resume/serializers.py` - 添加类型注解
-- `apps/resume_screening/views/screening.py` - 添加 serializer_class
-- `apps/final_recommend/views.py` - 添加 serializer_class
+- `apps/resume_screening/views/screening.py` - 添加 request body 定义
+- `apps/final_recommend/views.py` - 添加 request body 定义
+- `apps/position_settings/views.py` - 添加 operation_id
+- `apps/resume/views.py` - 添加 operation_id
+- `apps/interview_assist/views.py` - 添加 operation_id
 
 **步骤**:
-- [ ] 3.1.1 运行 `python manage.py spectacular --file Docs/openapi.json` 查看当前 warnings/errors 内容
-- [ ] 3.1.2 根据实际输出分析问题根因，判断是否需要修复及修复方案
-- [ ] 3.1.3 为 `ResumeListSerializer` 中的 `get_xxx` 方法添加 `@extend_schema_field` 装饰器（如需要）
-- [ ] 3.1.4 为 `ResumeDetailSerializer` 中的 `get_xxx` 方法添加类型注解（如需要）
-- [ ] 3.1.5 为 `ScreeningSubmitView` 添加 `@extend_schema` 请求体定义（如需要）
-- [ ] 3.1.6 为 `ComprehensiveAnalysisView` 添加 `@extend_schema` 请求体定义（如需要）
-- [ ] 3.1.7 重新生成 OpenAPI 文档并验证 warnings/errors 已解决
+- [x] 3.1.1 运行 `python manage.py spectacular --file Docs/openapi.json` 查看当前 warnings/errors 内容
+- [x] 3.1.2 根据实际输出分析问题根因，判断是否需要修复及修复方案
+- [x] 3.1.3 为 `ResumeListSerializer` 中的 `get_xxx` 方法添加 `@extend_schema_field` 装饰器
+- [x] 3.1.4 为 `ResumeDetailSerializer` 中的 `get_xxx` 方法添加类型注解
+- [x] 3.1.5 为 `ScreeningSubmitView` 添加 `@extend_schema` 请求体定义
+- [x] 3.1.6 为 `ComprehensiveAnalysisView` 添加 `@extend_schema` 请求体定义
+- [x] 3.1.7 为列表/详情视图添加显式 operation_id 解决冲突
+- [x] 3.1.8 重新生成 OpenAPI 文档并验证 warnings/errors 已解决
 
 ---
 
@@ -296,7 +300,7 @@ npm run dev
 
 | 任务 | 状态 | 完成时间 |
 |:----|:----:|:-------:|
-| Task 3.1 OpenAPI 文档修复 | ⬜ | - |
+| Task 3.1 OpenAPI 文档修复 | ✅ | 2024-12-14 |
 | Task 3.2 后端兼容清理 | ⬜ | - |
 | Task 3.3 前端类型合并 | ⬜ | - |
 

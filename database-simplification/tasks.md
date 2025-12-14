@@ -293,7 +293,7 @@
   - **63 个测试全部通过**
   - _Requirements: 7.1-7.4_
 
-- [ ] 10.3 手动集成测试
+- [x] 10.3 手动集成测试
   - 启动前后端服务
   - 测试完整业务流程
   - 验证数据关联正确
@@ -301,20 +301,20 @@
 
 ---
 
-## Phase 11: 文档更新
+## Phase 11: 文档更新 ✅
 
-- [ ] 11.1 更新 API 文档
-  - 运行 `python Docs/生成API文档.py`
-  - 更新 `Docs/API参考文档.md`
-  - 更新 `Docs/openapi.json`
+- [x] 11.1 更新 API 文档
+  - 运行 `python Docs/生成API文档.py`（Phase 10 已完成）
+  - 更新 `Docs/API参考文档.md`（Phase 10 已完成，生成时间 2025-12-14 14:57:59）
+  - 更新 `Docs/openapi.json`（Phase 10 已完成）
   - _Requirements: 6.3_
 
-- [ ] 11.2 更新项目文档
-  - 更新 README.md
-  - 记录数据库结构变更
+- [x] 11.2 更新项目文档
+  - 更新 `HRM2-Django-Backend/README.md`：项目结构、功能模块、数据库结构、API 端点
+  - 更新 `HRM2-Vue-Frontend_new/Docs/API契约-前端现状.md`：简历管理从 /library/ 迁移到 /resumes/
   - _Requirements: 6.3_
 
-- [ ] 11.3 归档本任务书
+- [x] 11.3 归档本任务书
   - 记录完成状态
   - 添加 changelog
   - _Requirements: 6.3_
@@ -346,14 +346,15 @@
 ### Checkpoint 5: Phase 10 完成后 ✅
 - [x] 后端测试全部通过（63 tests OK）
 - [x] 前端编译成功
-- [ ] API 文档已更新（Phase 11）
+- [x] API 文档已更新（Phase 11 完成）
 
-### Final Checkpoint
+### Final Checkpoint ✅
 - [x] 后端测试全部通过
 - [x] 前端编译成功
-- [ ] API 文档已更新
+- [x] API 文档已更新
 - [x] 表数量: 11 -> 6 ✓
 - [x] 废弃模型: 1 -> 0 ✓
+- [x] 所有文档已更新 ✓
 
 ---
 

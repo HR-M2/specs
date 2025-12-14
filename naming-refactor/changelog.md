@@ -77,14 +77,59 @@
 
 ---
 
+## [Phase 2] - 2024-12-14
+
+### 🟡 中优先级重构完成
+
+#### Task 2.1: Screening 模块视图类重命名
+
+**变更文件**:
+- `apps/resume_screening/views/screening.py`
+- `apps/resume_screening/views/resume_data.py`
+- `apps/resume_screening/views/__init__.py`
+- `apps/resume_screening/urls.py`
+
+**变更内容**:
+| 原名称 | 新名称 |
+|:------|:------|
+| `ResumeScreeningView` | `ScreeningSubmitView` |
+| `ResumeDataDetailView` | `ScreeningReportView` |
+
+---
+
+#### Task 2.2: Interview 模块视图类重命名
+
+**变更文件**:
+- `apps/interview_assist/views.py`
+- `apps/interview_assist/urls.py`
+
+**变更内容**:
+| 原名称 | 新名称 |
+|:------|:------|
+| `SessionListView` | `InterviewSessionListView` |
+| `SessionDetailView` | `InterviewSessionDetailView` |
+| `GenerateQuestionsView` | `InterviewQuestionsView` |
+| `RecordQAView` | `InterviewQAView` |
+| `GenerateReportView` | `InterviewReportView` |
+
+---
+
+#### Task 2.3: Recommend 模块视图类重命名
+
+**变更文件**:
+- `apps/final_recommend/views.py`
+- `apps/final_recommend/urls.py`
+
+**变更内容**:
+| 原名称 | 新名称 |
+|:------|:------|
+| `CandidateComprehensiveAnalysisView` | `ComprehensiveAnalysisView` |
+
+---
+
 ## 待完成
 
-### Phase 2 - 中优先级
-- [ ] Task 2.1: Screening 模块视图类重命名
-- [ ] Task 2.2: Interview 模块视图类重命名
-- [ ] Task 2.3: Recommend 模块视图类重命名
-
-### Phase 3 - 低优先级
+### Phase 3 - 低优先级（待执行）
 - [ ] Task 3.1: 后端移除 Position.to_dict() 兼容字段
 - [ ] Task 3.2: 前端类型 ResumeData → Resume 合并
 
@@ -92,7 +137,7 @@
 
 ## 验证清单
 
-### Phase 1 验证
+### Phase 1 & 2 验证
 
 - [ ] 后端服务正常启动 (`python manage.py runserver`)
 - [ ] 前端编译无错误 (`npm run build`)
@@ -101,3 +146,5 @@
 - [ ] `/library` 重定向到 `/resumes`
 - [ ] 面试辅助功能正常
 - [ ] 视频上传关联正常
+- [ ] 筛选提交功能正常
+- [ ] 综合分析功能正常
